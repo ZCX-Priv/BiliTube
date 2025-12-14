@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiliTube</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="logo-container">
+      <div class="logo-icon"></div>
+      <div class="logo-text">
+        <span>Bili</span><span>Tube</span>
+      </div>
+    </div>
+    <div class="loading-text" id="loading-status">初始化中</div>
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="menu-btn">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+      <a href="#/home" class="brand-logo">
+        <span class="bili">Bili</span><span class="tube">Tube</span>
+      </a>
+    </div>
+
+    <div class="header-center">
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="搜索">
+        <button class="search-btn">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
+      </div>
+      <div class="search-suggestions" id="search-suggestions">
+        <!-- Suggestions populated by JS -->
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="icon-btn" id="theme-toggle" title="切换深色模式">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" id="theme-icon">
+          <!-- Moon Icon (Default) -->
+          <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <a href="#/home" class="sidebar-link active">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>首页</span>
+      </a>
+      <a href="#/subscriptions" class="sidebar-link">
+        <svg viewBox="0 0 24 24"><path d="M18.7 8.7H5.3V7h13.4v1.7zm-1.7-5.3H7v1.7h10V3.4zm3.3 8.6H3.7V22h16.6V12zm-1.7 8.3H5.3v-6.6h13.4v6.6z"/></svg>
+        <span>订阅</span>
+      </a>
+      <a href="#/profile" class="sidebar-link">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span>我的主页</span>
+      </a>
+      
+      <div class="sidebar-divider"></div>
+      
+      <!-- More sidebar items can go here -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <section id="view-home" class="view active">
+        <div class="tags-bar">
+          <div class="tag-chip active">全部</div>
+          <div class="tag-chip">推荐</div>
+          <div class="tag-chip">热门</div>
+          <div class="tag-chip">音乐</div>
+          <div class="tag-chip">游戏</div>
+          <div class="tag-chip">科技</div>
+          <div class="tag-chip">新闻</div>
+          <div class="tag-chip">电影</div>
+          <div class="tag-chip">直播</div>
+          <div class="tag-chip">学习</div>
+        </div>
+
+        <div class="video-grid" id="video-grid">
+        </div>
+      </section>
+
+      <section id="view-subscriptions" class="view" hidden>
+        <div class="subs-container">
+          <div class="subs-list">
+            <div class="sub-item sub-item-all active">
+              <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=5'); background-size: cover;"></div>
+              <div class="sub-name">全部订阅</div>
+            </div>
+            <div class="sub-item">
+              <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=1'); background-size: cover;"></div>
+              <div class="sub-name">Tech Daily</div>
+            </div>
+            <div class="sub-item">
+              <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=2'); background-size: cover;"></div>
+              <div class="sub-name">Gaming Pro</div>
+            </div>
+            <div class="sub-item">
+              <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=3'); background-size: cover;"></div>
+              <div class="sub-name">音乐人生</div>
+            </div>
+            <div class="sub-item">
+              <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=4'); background-size: cover;"></div>
+              <div class="sub-name">家常菜课堂</div>
+            </div>
+          </div>
+          
+          <div class="subs-content">
+            <div class="feed-card">
+              <div class="feed-header">
+                <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=1'); background-size: cover;"></div>
+                <div class="feed-meta">
+                  <div class="sub-name">科技日报</div>
+                  <div class="feed-time">2 小时前</div>
+                </div>
+              </div>
+              <div class="feed-body">
+                <div class="feed-text">快来看看我们最新的手机评测！这次的相机升级非常惊艳。</div>
+                <div class="feed-media">
+                  <img src="https://picsum.photos/600/300?random=10" alt="Feed Image" class="feed-img" loading="lazy">
+                </div>
+              </div>
+            </div>
+
+            <div class="feed-card">
+              <div class="feed-header">
+                <div class="sub-avatar" style="background-image: url('https://picsum.photos/40/40?random=2'); background-size: cover;"></div>
+                <div class="feed-meta">
+                  <div class="sub-name">游戏高手</div>
+                  <div class="feed-time">5 小时前</div>
+                </div>
+              </div>
+              <div class="feed-body">
+                <div class="feed-text">直播将在 10 分钟后开始！一起来看高能对局。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-profile" class="view" hidden>
+        <div class="profile-header">
+          <div class="profile-avatar"></div>
+          <div class="profile-info">
+            <h1>用户名</h1>
+            <p>这里是一段关于用户的简介。</p>
+          </div>
+        </div>
+
+        <div class="profile-tabs">
+          <button class="tab-btn active" data-tab="recent">最近观看</button>
+          <button class="tab-btn" data-tab="favorites">收藏</button>
+          <button class="tab-btn" data-tab="watchlater">稍后观看</button>
+          <button class="tab-btn" data-tab="settings">设置</button>
+        </div>
+
+        <div id="recent" class="tab-content active">
+          <div class="video-grid" id="recent-grid">
+          </div>
+        </div>
+        <div id="favorites" class="tab-content">收藏内容</div>
+        <div id="watchlater" class="tab-content">稍后观看内容</div>
+        <div id="settings" class="tab-content">设置内容</div>
+      </section>
+
+      <section id="view-video" class="view" hidden>
+        <div class="video-page-container">
+          <div class="video-main">
+            <div class="player-container">
+              <div class="player-placeholder">
+                <div class="play-btn-overlay">
+                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            
+            <div class="video-primary-info">
+              <h1>10 分钟搭建一个网站</h1>
+              <div class="video-stats">
+                <span>1,234,567 次观看 • 2025 年 12 月 14 日</span>
+                <div class="actions">
+                  <div class="action-btn">
+                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/></svg>
+                     <span>12K</span>
+                  </div>
+                  <div class="action-btn">
+                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+                     <span>不喜欢</span>
+                  </div>
+                  <div class="action-btn">
+                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z"/></svg>
+                     <span>分享</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="channel-row">
+              <div class="channel-avatar" style="width: 48px; height: 48px; background-image: url('https://picsum.photos/50/50?random=101'); background-size: cover;"></div>
+              <div class="video-details" style="margin-left: 12px;">
+                <div class="channel-name" style="color: var(--text-primary); font-weight: 500;">Web Dev Simplified</div>
+                <div class="video-meta">150 万订阅</div>
+              </div>
+              <button class="subscribe-btn">订阅</button>
+            </div>
+
+            <div class="video-description">
+              <p>在本视频中，我们将用 10 分钟搭建一个响应式网站，适合想要入门前端开发的同学。</p>
+            </div>
+
+            <div class="comments-section">
+              <h3>245 条评论</h3>
+              <div class="comment">
+                <div class="comment-avatar" style="background-image: url('https://picsum.photos/40/40?random=200'); background-size: cover;"></div>
+                <div class="comment-content">
+                  <div class="comment-header">
+                    <span class="comment-author">用户 123</span>
+                    <span class="comment-time">2 天前</span>
+                  </div>
+                  <div class="comment-text">非常棒的教程，对我帮助很大。</div>
+                </div>
+              </div>
+               <div class="comment">
+                <div class="comment-avatar" style="background-image: url('https://picsum.photos/40/40?random=201'); background-size: cover;"></div>
+                <div class="comment-content">
+                  <div class="comment-header">
+                    <span class="comment-author">Coder X</span>
+                    <span class="comment-time">1 天前</span>
+                  </div>
+                  <div class="comment-text">可以下次出一期 JavaScript 的视频吗？</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-sidebar">
+             <div class="related-video-card">
+               <div class="related-thumb">
+                 <img src="https://picsum.photos/168/94?random=50" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">
+                 <span class="video-duration">5:00</span>
+               </div>
+               <div class="related-info">
+                 <h4>Advanced CSS Tricks</h4>
+                 <div class="related-meta">Web Dev Simplified</div>
+                 <div class="related-meta">200K views</div>
+               </div>
+             </div>
+             <div class="related-video-card">
+               <div class="related-thumb">
+                 <img src="https://picsum.photos/168/94?random=51" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">
+                 <span class="video-duration">8:20</span>
+               </div>
+               <div class="related-info">
+                 <h4>Learn React in 2025</h4>
+                 <div class="related-meta">Web Dev Simplified</div>
+                 <div class="related-meta">500K views</div>
+               </div>
+             </div>
+             <div class="related-video-card">
+               <div class="related-thumb">
+                 <img src="https://picsum.photos/168/94?random=52" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">
+                 <span class="video-duration">12:15</span>
+               </div>
+               <div class="related-info">
+                 <h4>Full Stack Roadmap</h4>
+                 <div class="related-meta">Traversy Media</div>
+                 <div class="related-meta">1M views</div>
+               </div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-search" class="view" hidden>
+        <div class="search-results-header">
+          <button class="back-home-btn" id="search-back">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span>返回首页</span>
+          </button>
+          <div class="search-keyword-box">
+            <span id="search-keyword-label"></span>
+          </div>
+        </div>
+
+        <div class="search-tabs">
+          <button class="search-tab active" data-type="videos">视频</button>
+          <button class="search-tab" data-type="users">用户</button>
+        </div>
+
+        <div id="search-results-videos" class="search-results-videos active">
+          <div class="video-grid" id="search-video-grid"></div>
+        </div>
+
+        <div id="search-results-users" class="search-results-users">
+          <div id="search-user-list" class="user-list-row"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

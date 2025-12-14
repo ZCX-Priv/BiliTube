@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-  initLoadingScreen();
-  initTheme();
-  initSidebar();
-  initSearch();
-  initTags();
-  initRouter();
+  initStorage().then(() => {
+    initLoadingScreen();
+    initTheme();
+    initSidebar();
+    initSearch();
+    initTags();
+    initRouter();
+  });
 });
 
 const I18N = {
@@ -27,6 +29,100 @@ function t(key) {
   const dict = I18N[currentLang] || I18N.zh;
   if (!dict) return key;
   return Object.prototype.hasOwnProperty.call(dict, key) ? dict[key] : key;
+}
+
+const STORAGE_DB_NAME = 'btube-app';
+const STORAGE_DB_VERSION = 1;
+const STORAGE_STORE_NAME = 'kv';
+
+const storageState = {
+  db: null,
+  cache: {},
+  readyPromise: null
+};
+
+function openStorageDb() {
+  if (!window.indexedDB) {
+    return Promise.resolve(null);
+  }
+  if (storageState.db) {
+    return Promise.resolve(storageState.db);
+  }
+  if (storageState.readyPromise) {
+    return storageState.readyPromise;
+  }
+  storageState.readyPromise = new Promise((resolve) => {
+    const request = window.indexedDB.open(STORAGE_DB_NAME, STORAGE_DB_VERSION);
+    request.onupgradeneeded = function () {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORAGE_STORE_NAME)) {
+        db.createObjectStore(STORAGE_STORE_NAME);
+      }
+    };
+    request.onsuccess = function () {
+      storageState.db = request.result;
+      resolve(storageState.db);
+    };
+    request.onerror = function () {
+      resolve(null);
+    };
+  });
+  return storageState.readyPromise;
+}
+
+function initStorage() {
+  if (storageState.readyPromise) {
+    return storageState.readyPromise;
+  }
+  storageState.readyPromise = openStorageDb().then((db) => {
+    if (!db) {
+      return;
+    }
+    const keys = ['theme', 'btube-search-history', 'sidebar-collapsed', 'btube-subs-ux-variant', 'btube-subs-metrics'];
+    return Promise.all(keys.map((key) => {
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORAGE_STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORAGE_STORE_NAME);
+        const request = store.get(key);
+        request.onsuccess = function () {
+          if (request.result !== undefined) {
+            storageState.cache[key] = request.result;
+          }
+          resolve();
+        };
+        request.onerror = function () {
+          resolve();
+        };
+      });
+    }));
+  });
+  return storageState.readyPromise;
+}
+
+function storageGetItem(key) {
+  return Object.prototype.hasOwnProperty.call(storageState.cache, key)
+    ? storageState.cache[key]
+    : null;
+}
+
+function storageSetItem(key, value) {
+  storageState.cache[key] = value;
+  openStorageDb().then((db) => {
+    if (!db) return;
+    const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORAGE_STORE_NAME);
+    store.put(value, key);
+  });
+}
+
+function storageRemoveItem(key) {
+  delete storageState.cache[key];
+  openStorageDb().then((db) => {
+    if (!db) return;
+    const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORAGE_STORE_NAME);
+    store.delete(key);
+  });
 }
 
 /* --- Loading Screen --- */
@@ -92,7 +188,7 @@ function initTheme() {
   const themeIcon = document.getElementById('theme-icon');
   const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
   
-  const savedTheme = localStorage.getItem('theme');
+  const savedTheme = storageGetItem('theme');
   if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
     document.body.setAttribute('data-theme', 'dark');
     updateThemeIcon(true);
@@ -102,11 +198,11 @@ function initTheme() {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     if (isDark) {
       document.body.removeAttribute('data-theme');
-      localStorage.setItem('theme', 'light');
+      storageSetItem('theme', 'light');
       updateThemeIcon(false);
     } else {
       document.body.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
+      storageSetItem('theme', 'dark');
       updateThemeIcon(true);
     }
   });
@@ -175,7 +271,7 @@ function escapeHtml(text) {
 
 function getSearchHistory() {
   try {
-    const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+    const raw = storageGetItem(SEARCH_HISTORY_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -186,11 +282,11 @@ function getSearchHistory() {
 
 function saveSearchHistory(list) {
   if (!Array.isArray(list)) {
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify([]));
+    storageSetItem(SEARCH_HISTORY_KEY, JSON.stringify([]));
     return;
   }
   const trimmed = list.slice(0, 10);
-  localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(trimmed));
+  storageSetItem(SEARCH_HISTORY_KEY, JSON.stringify(trimmed));
 }
 
 function addSearchHistory(keyword) {
@@ -202,7 +298,7 @@ function addSearchHistory(keyword) {
 }
 
 function clearSearchHistory() {
-  localStorage.removeItem(SEARCH_HISTORY_KEY);
+  storageRemoveItem(SEARCH_HISTORY_KEY);
 }
 
 function clearSearchHistoryUI(e) {
@@ -324,14 +420,14 @@ function initSidebar() {
   const menuBtn = document.querySelector('.menu-btn');
   if (!menuBtn) return;
 
-  const saved = localStorage.getItem('sidebar-collapsed');
+  const saved = storageGetItem('sidebar-collapsed');
   if (saved === 'true') {
     document.body.classList.add('sidebar-collapsed');
   }
 
   menuBtn.addEventListener('click', () => {
     const collapsed = document.body.classList.toggle('sidebar-collapsed');
-    localStorage.setItem('sidebar-collapsed', collapsed ? 'true' : 'false');
+    storageSetItem('sidebar-collapsed', collapsed ? 'true' : 'false');
   });
 }
 
@@ -359,17 +455,17 @@ const SUBS_VARIANT_KEY = 'btube-subs-ux-variant';
 const SUBS_METRIC_KEY = 'btube-subs-metrics';
 
 function getSubsVariant() {
-  let v = localStorage.getItem(SUBS_VARIANT_KEY);
+  let v = storageGetItem(SUBS_VARIANT_KEY);
   if (v !== 'A' && v !== 'B') {
     v = Math.random() < 0.5 ? 'A' : 'B';
-    localStorage.setItem(SUBS_VARIANT_KEY, v);
+    storageSetItem(SUBS_VARIANT_KEY, v);
   }
   return v;
 }
 
 function readSubsMetrics() {
   try {
-    const raw = localStorage.getItem(SUBS_METRIC_KEY);
+    const raw = storageGetItem(SUBS_METRIC_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : {};
@@ -379,7 +475,7 @@ function readSubsMetrics() {
 }
 
 function writeSubsMetrics(data) {
-  localStorage.setItem(SUBS_METRIC_KEY, JSON.stringify(data || {}));
+  storageSetItem(SUBS_METRIC_KEY, JSON.stringify(data || {}));
 }
 
 function trackSubsEvent(type, variant) {

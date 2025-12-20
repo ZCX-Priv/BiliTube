@@ -210,7 +210,6 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def handle_proxy(self, method, parsed):
         query = urllib.parse.parse_qs(parsed.query)
         raw = query.get("u", [""])[0]
-        raw = urllib.parse.unquote(raw)
         target = build_target_url(raw)
         if not target:
             self.send_error(400, "Missing or invalid target url")
@@ -286,7 +285,6 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def handle_stream(self, parsed):
         query = urllib.parse.parse_qs(parsed.query)
         raw = query.get("u", [""])[0]
-        raw = urllib.parse.unquote(raw)
         target = build_target_url(raw)
         if not target:
             self.send_error(400, "Missing or invalid target url")

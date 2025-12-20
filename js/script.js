@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initStorage().then(() => {
     initLoadingScreen();
     initTheme();
+    biliTubeInitModal();
     initSidebar();
     initSearch();
     initTags();
@@ -36,7 +37,7 @@ function t(key) {
   return Object.prototype.hasOwnProperty.call(dict, key) ? dict[key] : key;
 }
 
-const STORAGE_DB_NAME = 'btube-app';
+const STORAGE_DB_NAME = 'bilitube-app';
 const STORAGE_DB_VERSION = 3;
 const STORAGE_STORE_NAME = 'kv';
 
@@ -90,7 +91,7 @@ function initStorage() {
     if (!db) {
       return;
     }
-    const keys = ['theme', 'btube-search-history', 'sidebar-collapsed', 'btube-subs-ux-variant', 'btube-subs-metrics'];
+    const keys = ['theme', 'bilitube-search-history', 'sidebar-collapsed', 'bilitube-subs-ux-variant', 'bilitube-subs-metrics'];
     return Promise.all(keys.map((key) => {
       return new Promise((resolve) => {
         const tx = db.transaction(STORAGE_STORE_NAME, 'readonly');
@@ -139,7 +140,7 @@ function storageRemoveItem(key) {
 
 const WATCH_HISTORY_STORE = 'watch_history';
 
-function btubeRecordWatchHistory(entry) {
+function biliTubeRecordWatchHistory(entry) {
   if (!entry || !entry.id) return;
   openStorageDb().then((db) => {
     if (!db) return;
@@ -160,7 +161,7 @@ function btubeRecordWatchHistory(entry) {
   });
 }
 
-function btubeQueryWatchHistory(limit) {
+function biliTubeQueryWatchHistory(limit) {
   const max = typeof limit === 'number' && limit > 0 ? limit : Infinity;
   return openStorageDb().then((db) => {
     if (!db) return [];
@@ -206,7 +207,7 @@ function btubeQueryWatchHistory(limit) {
   });
 }
 
-function btubeDeleteWatchHistoryByKey(key) {
+function biliTubeDeleteWatchHistoryByKey(key) {
   if (key == null) return;
   const numKey = Number(key);
   openStorageDb().then((db) => {
@@ -218,13 +219,66 @@ function btubeDeleteWatchHistoryByKey(key) {
   });
 }
 
-function btubeClearWatchHistory() {
+function biliTubeClearWatchHistory() {
   openStorageDb().then((db) => {
     if (!db) return;
     if (!db.objectStoreNames.contains(WATCH_HISTORY_STORE)) return;
     const tx = db.transaction(WATCH_HISTORY_STORE, 'readwrite');
     const store = tx.objectStore(WATCH_HISTORY_STORE);
     store.clear();
+  });
+}
+
+const biliTubeModalState = {
+  resolve: null
+};
+
+function biliTubeInitModal() {
+  const modal = document.getElementById('btube-modal');
+  if (!modal) return;
+  const cancelBtn = modal.querySelector('[data-action="modal-cancel"]');
+  const confirmBtn = modal.querySelector('[data-action="modal-confirm"]');
+  const close = (ok) => {
+    modal.hidden = true;
+    if (biliTubeModalState.resolve) {
+      biliTubeModalState.resolve(ok);
+      biliTubeModalState.resolve = null;
+    }
+  };
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      close(false);
+    });
+  }
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      close(true);
+    });
+  }
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      close(false);
+    }
+  });
+}
+
+function biliTubeConfirm(message) {
+  const modal = document.getElementById('btube-modal');
+  if (!modal) {
+    const ok = window.confirm(message);
+    return Promise.resolve(ok);
+  }
+  const titleEl = document.getElementById('btube-modal-title');
+  const bodyEl = document.getElementById('btube-modal-body');
+  if (titleEl) {
+    titleEl.textContent = '确认操作';
+  }
+  if (bodyEl) {
+    bodyEl.textContent = message;
+  }
+  modal.hidden = false;
+  return new Promise((resolve) => {
+    biliTubeModalState.resolve = resolve;
   });
 }
 
@@ -330,7 +384,7 @@ function initVideoGrid() {
 }
 
 /* --- Search Suggestions --- */
-const SEARCH_HISTORY_KEY = 'btube-search-history';
+const SEARCH_HISTORY_KEY = 'bilitube-search-history';
 
 function escapeHtml(text) {
   return text
@@ -541,8 +595,8 @@ const routes = {
 let videoViewBound = false;
 let lastNonVideoHash = '#/home';
 
-const SUBS_VARIANT_KEY = 'btube-subs-ux-variant';
-const SUBS_METRIC_KEY = 'btube-subs-metrics';
+const SUBS_VARIANT_KEY = 'bilitube-subs-ux-variant';
+const SUBS_METRIC_KEY = 'bilitube-subs-metrics';
 
 function getSubsVariant() {
   let v = storageGetItem(SUBS_VARIANT_KEY);
@@ -634,7 +688,7 @@ function handleRouteChange() {
   }
 }
 
-function btubeLoadProfileHeader(view) {
+function biliTubeLoadProfileHeader(view) {
   if (!view) return;
   const avatarEl = view.querySelector('.profile-avatar');
   const nameEl = view.querySelector('.profile-info h1');
@@ -687,12 +741,12 @@ function btubeLoadProfileHeader(view) {
     });
 }
 
-function btubeRenderProfileHistory(view) {
+function biliTubeRenderProfileHistory(view) {
   const recentGrid =
     (view && view.querySelector('#recent-grid')) ||
     document.getElementById('recent-grid');
   if (!recentGrid) return;
-  btubeQueryWatchHistory().then((items) => {
+  biliTubeQueryWatchHistory().then((items) => {
     if (!items || !items.length) {
       recentGrid.innerHTML =
         '<div class="empty-result">暂无观看历史</div>';
@@ -851,7 +905,7 @@ function initProfileView() {
     view.dataset.tabsBound = 'true';
   }
   if (!view.dataset.profileLoaded) {
-    btubeLoadProfileHeader(view);
+    biliTubeLoadProfileHeader(view);
     view.dataset.profileLoaded = 'true';
   }
   if (!view.dataset.historyBound) {
@@ -865,11 +919,19 @@ function initProfileView() {
           e.stopPropagation();
           const itemEl = removeBtn.closest('.timeline-item');
           if (itemEl) {
-            const key = itemEl.getAttribute('data-key');
-            if (key != null && key !== '') {
-              btubeDeleteWatchHistoryByKey(key);
-            }
-            btubeRenderProfileHistory(view);
+            const titleEl = itemEl.querySelector('.timeline-title');
+            const titleText = titleEl ? titleEl.textContent || '' : '';
+            const msg = titleText
+              ? '确定删除这条观看记录吗？\n《' + titleText + '》'
+              : '确定删除这条观看记录吗？';
+            biliTubeConfirm(msg).then((ok) => {
+              if (!ok) return;
+              const key = itemEl.getAttribute('data-key');
+              if (key != null && key !== '') {
+                biliTubeDeleteWatchHistoryByKey(key);
+              }
+              biliTubeRenderProfileHistory(view);
+            });
           }
           return;
         }
@@ -888,13 +950,16 @@ function initProfileView() {
       document.querySelector('[data-action="history-clear"]');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
-        btubeClearWatchHistory();
-        btubeRenderProfileHistory(view);
+        biliTubeConfirm('确定清空所有观看历史吗？').then((ok) => {
+          if (!ok) return;
+          biliTubeClearWatchHistory();
+          biliTubeRenderProfileHistory(view);
+        });
       });
     }
     view.dataset.historyBound = 'true';
   }
-  btubeRenderProfileHistory(view);
+  biliTubeRenderProfileHistory(view);
 }
 
 function initVideoView(id) {
@@ -907,8 +972,8 @@ function initVideoView(id) {
   }
 
   const rawId = id != null ? decodeURIComponent(id) : '';
-  if (typeof btubeLoadVideoById === 'function' && rawId) {
-    btubeLoadVideoById(rawId);
+  if (typeof biliTubeLoadVideoById === 'function' && rawId) {
+    biliTubeLoadVideoById(rawId);
   }
 }
 
@@ -964,15 +1029,14 @@ function bindVideoView(view) {
     });
   }
 
-  const replyButtons = view.querySelectorAll('.btube-reply-btn');
-  replyButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = btn.closest('.btube-comment-item');
-      if (!item) return;
-      const box = item.querySelector('.btube-reply-box');
-      if (!box) return;
-      box.classList.toggle('active');
-    });
+  view.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btube-reply-btn');
+    if (!btn || !view.contains(btn)) return;
+    const item = btn.closest('.btube-comment-item');
+    if (!item) return;
+    const box = item.querySelector('.btube-reply-box');
+    if (!box) return;
+    box.classList.toggle('active');
   });
 
   const video = view.querySelector('#btube-video');
@@ -1118,8 +1182,8 @@ function initSearchView(type, keyword) {
       });
     }
 
-    if (!window.__btubeSearchScrollBound) {
-      window.__btubeSearchScrollBound = true;
+    if (!window.__biliTubeSearchScrollBound) {
+      window.__biliTubeSearchScrollBound = true;
       window.addEventListener('scroll', () => {
         const searchView = document.getElementById('view-search');
         if (!searchView || searchView.hidden) return;

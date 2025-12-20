@@ -1,6 +1,6 @@
 ## 概览
 
-`backend.py` 实现了一个基于 Python 标准库的轻量级反向代理服务，用于为前端页面（BTube）提供统一的跨域访问能力，尤其针对 B 站（`bilibili.com` / `hdslb.com`）的接口与媒体资源做了专门适配。
+`backend.py` 实现了一个基于 Python 标准库的轻量级反向代理服务，用于为前端页面（BiliTube）提供统一的跨域访问能力，尤其针对 B 站（`bilibili.com` / `hdslb.com`）的接口与媒体资源做了专门适配。
 
 核心能力：
 - 提供 `/proxy` 与 `/stream` 两类代理入口

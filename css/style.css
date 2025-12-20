@@ -787,6 +787,82 @@ body {
   background-color: var(--hover-color);
 }
 
+.btube-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.btube-modal[hidden] {
+  display: none;
+}
+
+.btube-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.btube-modal-dialog {
+  position: relative;
+  max-width: 360px;
+  width: 90%;
+  background-color: var(--surface-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-3);
+  padding: 16px 20px 14px;
+  z-index: 1;
+}
+
+.btube-modal-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.btube-modal-body {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.btube-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btube-modal-btn {
+  min-width: 72px;
+  padding: 6px 12px;
+  border-radius: var(--radius-btn);
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btube-modal-btn-secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+
+.btube-modal-btn-secondary:hover {
+  background-color: var(--hover-color);
+}
+
+.btube-modal-btn-primary {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.btube-modal-btn-primary:hover {
+  opacity: 0.9;
+}
+
 .video-page-container {
   display: flex;
   gap: 16px;

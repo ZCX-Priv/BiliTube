@@ -206,41 +206,7 @@
                     <div class="btube-recommendations" id="btube-recommendations"></div>
                   </div>
 
-                  <div id="btube-comments-content" class="btube-comments-section">
-                    <div class="btube-comment-item">
-                      <div class="btube-avatar btube-avatar-small">U1</div>
-                      <div class="btube-comment-content">
-                        <div class="btube-comment-user">用户甲</div>
-                        <div class="btube-comment-text">这个界面设计得真漂亮，非常符合 Material You 的审美。</div>
-                        <button type="button" class="btube-reply-btn">
-                          <span>评论回复</span>
-                        </button>
-                        <div class="btube-reply-box">
-                          <div class="btube-comment-item btube-comment-reply">
-                            <div class="btube-avatar btube-avatar-xsmall">A</div>
-                            <div class="btube-comment-content">
-                              <div class="btube-comment-user">作者 (回复)</div>
-                              <div class="btube-comment-text">感谢支持。</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="btube-comment-item">
-                      <div class="btube-avatar btube-avatar-small">U2</div>
-                      <div class="btube-comment-content">
-                        <div class="btube-comment-user">用户乙</div>
-                        <div class="btube-comment-text">能不能分享一下 CSS 源码？</div>
-                        <button type="button" class="btube-reply-btn">
-                          <span>评论回复</span>
-                        </button>
-                        <div class="btube-reply-box">
-                          <div class="btube-reply-placeholder">输入回复内容...</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <div id="btube-comments-content" class="btube-comments-section"></div>
                 </div>
               </aside>
             </div>
@@ -273,6 +239,18 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div id="btube-modal" class="btube-modal" hidden>
+    <div class="btube-modal-backdrop"></div>
+    <div class="btube-modal-dialog">
+      <div class="btube-modal-title" id="btube-modal-title"></div>
+      <div class="btube-modal-body" id="btube-modal-body"></div>
+      <div class="btube-modal-actions">
+        <button type="button" class="btube-modal-btn btube-modal-btn-secondary" data-action="modal-cancel">取消</button>
+        <button type="button" class="btube-modal-btn btube-modal-btn-primary" data-action="modal-confirm">确定</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>

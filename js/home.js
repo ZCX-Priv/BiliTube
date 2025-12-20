@@ -274,7 +274,7 @@ function handleHomeScroll() {
 }
 
 function bindHomeScroll() {
-  if (window.__btubeHomeScrollBound) return;
-  window.__btubeHomeScrollBound = true;
+  if (window.__biliTubeHomeScrollBound) return;
+  window.__biliTubeHomeScrollBound = true;
   window.addEventListener('scroll', handleHomeScroll);
 }

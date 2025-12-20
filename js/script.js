@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+  if (!supportsFlexGap()) {
+    document.documentElement.classList.add('no-flex-gap');
+  }
   initStorage().then(() => {
     initLoadingScreen();
     initTheme();
@@ -13,6 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
 function isMobileDevice() {
   const ua = navigator.userAgent || '';
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+}
+
+function supportsFlexGap() {
+  if (typeof document === 'undefined') return true;
+  const flex = document.createElement('div');
+  flex.style.display = 'flex';
+  flex.style.flexDirection = 'column';
+  flex.style.rowGap = '1px';
+  flex.appendChild(document.createElement('div'));
+  flex.appendChild(document.createElement('div'));
+  document.body.appendChild(flex);
+  const isSupported = flex.scrollHeight === 1;
+  if (flex.parentNode) {
+    flex.parentNode.removeChild(flex);
+  }
+  return isSupported;
 }
 
 const I18N = {

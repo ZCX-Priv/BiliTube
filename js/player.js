@@ -28,6 +28,34 @@ function playerFetchJson(u) {
   });
 }
 
+function playerNormalizeUrl(u) {
+  if (!u) return '';
+  var s = String(u);
+  if (s.indexOf('/proxy?') === 0 || s.indexOf('/stream?') === 0) {
+    var qIndex = s.indexOf('?');
+    if (qIndex !== -1 && qIndex + 1 < s.length) {
+      var params = s.slice(qIndex + 1).split('&');
+      for (var i = 0; i < params.length; i++) {
+        var kv = params[i].split('=');
+        if (kv[0] === 'u' && kv[1]) {
+          try {
+            return decodeURIComponent(kv[1]);
+          } catch (e) {
+            return kv[1];
+          }
+        }
+      }
+    }
+  }
+  if (s.indexOf('//') === 0) {
+    return 'https:' + s;
+  }
+  if (!/^https?:\/\//i.test(s)) {
+    return 'https://' + s;
+  }
+  return s;
+}
+
 function playerAttachSource(videoEl, url) {
   if (!videoEl || !url) return;
   var isHls = /\.m3u8(\?|$)/i.test(url);
@@ -66,6 +94,16 @@ function playerAttachSource(videoEl, url) {
   }
 }
 
+function playerDetectQn() {
+  var ua = navigator.userAgent || '';
+  var match = ua.match(/Chrome\/(\d+)/);
+  var version = match && match[1] ? parseInt(match[1], 10) : 0;
+  if (version && version <= 80) {
+    return 32;
+  }
+  return 64;
+}
+
 function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
   if (!videoEl || !cid) return Promise.reject(new Error('no_cid'));
   var qs = '';
@@ -77,7 +115,9 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
     qs = 'cid=' + encodeURIComponent(String(cid));
   }
   var api =
-    'https://api.bilibili.com/x/player/playurl?type=mp4&platform=html5&qn=64&high_quality=1&' +
+    'https://api.bilibili.com/x/player/playurl?type=mp4&platform=html5&qn=' +
+    String(playerDetectQn()) +
+    '&high_quality=1&' +
     qs +
     '&cid=' +
     encodeURIComponent(String(cid));
@@ -91,7 +131,10 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
       if (!durl || !durl.length || !durl[0] || !durl[0].url) {
         throw new Error('no_durl');
       }
-      var rawUrl = durl[0].url;
+      var rawUrl = playerNormalizeUrl(durl[0].url);
+      if (!rawUrl) {
+        throw new Error('no_durl');
+      }
       var streamUrl = '/stream?u=' + encodeURIComponent(rawUrl);
       playerAttachSource(videoEl, streamUrl);
       var banner = document.getElementById('btube-video-error');
@@ -404,7 +447,11 @@ function playerAppendSubReply(box, sub) {
   var subFace =
     (sub.member && (sub.member.avatar || sub.member.face)) || '';
   if (subFace) {
-    subAvatar.style.backgroundImage = "url('" + subFace + "')";
+    var subFaceUrl = subFace;
+    if (typeof homeParseCoverUrl === 'function') {
+      subFaceUrl = homeParseCoverUrl(subFaceUrl);
+    }
+    subAvatar.style.backgroundImage = "url('" + subFaceUrl + "')";
   } else {
     subAvatar.textContent = subName ? subName.charAt(0) : 'U';
   }
@@ -485,7 +532,11 @@ function playerLoadMoreComments(isFirstPage) {
       var face =
         (reply.member && (reply.member.avatar || reply.member.face)) || '';
       if (face) {
-        avatar.style.backgroundImage = "url('" + face + "')";
+        var faceUrl = face;
+        if (typeof homeParseCoverUrl === 'function') {
+          faceUrl = homeParseCoverUrl(faceUrl);
+        }
+        avatar.style.backgroundImage = "url('" + faceUrl + "')";
       } else {
         avatar.textContent = uname ? uname.charAt(0) : 'U';
       }
@@ -615,7 +666,11 @@ function playerLoadRecommendations(bvid, aid) {
         thumb.className = 'btube-rec-thumb';
         var pic = item.pic || item.cover || '';
         if (pic) {
-          thumb.style.backgroundImage = "url('" + pic + "')";
+          var coverUrl = pic;
+          if (typeof homeParseCoverUrl === 'function') {
+            coverUrl = homeParseCoverUrl(coverUrl);
+          }
+          thumb.style.backgroundImage = "url('" + coverUrl + "')";
           thumb.style.backgroundSize = 'cover';
           thumb.style.backgroundPosition = 'center';
         }

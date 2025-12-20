@@ -1643,6 +1643,117 @@ body {
   font-size: 14px;
 }
 
+.no-flex-gap .header-right > * + * {
+  margin-left: 16px;
+}
+
+.no-flex-gap .tags-bar > * + * {
+  margin-left: 12px;
+}
+
+.no-flex-gap .video-grid > * {
+  margin-bottom: 24px;
+}
+
+.no-flex-gap .video-info > * + * {
+  margin-left: 12px;
+}
+
+.no-flex-gap .timeline > * + * {
+  margin-top: 24px;
+}
+
+.no-flex-gap .timeline-items > * + * {
+  margin-top: 16px;
+}
+
+.no-flex-gap .timeline-content > * + * {
+  margin-top: 8px;
+}
+
+.no-flex-gap .timeline-header-row > * + * {
+  margin-left: 8px;
+}
+
+.no-flex-gap .timeline-main > * + * {
+  margin-left: 12px;
+}
+
+.no-flex-gap .timeline-text > * + * {
+  margin-top: 4px;
+}
+
+.no-flex-gap .btube-modal-actions > * + * {
+  margin-left: 8px;
+}
+
+.no-flex-gap .video-page-container > * + * {
+  margin-left: 16px;
+}
+
+.no-flex-gap .actions > * + * {
+  margin-left: 16px;
+}
+
+.no-flex-gap .action-btn > * + * {
+  margin-left: 8px;
+}
+
+.no-flex-gap .btube-video-layout > * + * {
+  margin-left: 16px;
+}
+
+.no-flex-gap .btube-tabs > * + * {
+  margin-left: 4px;
+}
+
+.no-flex-gap .btube-header-actions > * + * {
+  margin-left: 4px;
+}
+
+.no-flex-gap .btube-panel-video-controls > * {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.no-flex-gap .btube-control-chip > * + * {
+  margin-left: 6px;
+}
+
+.no-flex-gap .btube-author-card > * + * {
+  margin-left: 12px;
+}
+
+.no-flex-gap .btube-rec-item > * + * {
+  margin-left: 10px;
+}
+
+.no-flex-gap .btube-episode-list > * {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.no-flex-gap .btube-comment-item > * + * {
+  margin-left: 10px;
+}
+
+.no-flex-gap .comment > * + * {
+  margin-left: 16px;
+}
+
+.no-flex-gap .related-video-card > * + * {
+  margin-left: 8px;
+}
+
+.no-flex-gap .user-list-row > * {
+  margin-right: 16px;
+  margin-bottom: 16px;
+}
+
+.no-flex-gap .user-card > * + * {
+  margin-left: 12px;
+}
+
 .search-load-more {
   margin: 16px auto 0;
   display: block;

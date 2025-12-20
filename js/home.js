@@ -36,6 +36,10 @@ function mapHomeRcmdItem(item) {
     (item.owner && (item.owner.name || item.owner.uname)) ||
     (item.args && item.args.up_name) ||
     '';
+  const avatar =
+    (item.owner && (item.owner.face || item.owner.pic)) ||
+    (item.args && item.args.up_face) ||
+    '';
   const stat = item.stat || item.rcmd_reason || {};
   let views = '';
   if (stat.view != null) {
@@ -51,7 +55,8 @@ function mapHomeRcmdItem(item) {
     title,
     channel: name,
     views,
-    time: ''
+    time: '',
+    avatar
   };
 }
 
@@ -60,6 +65,7 @@ function mapHomePopularItem(item) {
   const duration = homeFormatDuration(item.duration || 0);
   const title = item.title || '';
   const name = (item.owner && item.owner.name) || '';
+  const avatar = (item.owner && (item.owner.face || item.owner.pic)) || '';
   const stat = item.stat || {};
   let views = '';
   if (stat.view != null) {
@@ -75,7 +81,8 @@ function mapHomePopularItem(item) {
     title,
     channel: name,
     views,
-    time: ''
+    time: '',
+    avatar
   };
 }
 
@@ -90,6 +97,13 @@ function createHomeCardHtml(video, indexOffset) {
   const duration = video.duration || '';
   const idx = Number.isFinite(indexOffset) ? indexOffset : 0;
   const avatarSeed = 1000 + idx;
+  let avatar = video.avatar || '';
+  if (avatar && typeof homeParseCoverUrl === 'function') {
+    avatar = homeParseCoverUrl(avatar);
+  }
+  const avatarStyle = avatar
+    ? "background-image: url('" + avatar + "'); background-size: cover;"
+    : "background-color: var(--divider-color);";
   return (
     '<div class="video-card" onclick="window.location.hash=\'#/video/' +
     safeId +
@@ -101,9 +115,9 @@ function createHomeCardHtml(video, indexOffset) {
     (duration ? '<span class="video-duration">' + duration + '</span>' : '') +
     '</div>' +
     '<div class="video-info">' +
-    '<div class="channel-avatar" style="background-image: url(\'https://picsum.photos/40/40?random=' +
-    avatarSeed +
-    '\'); background-size: cover;"></div>' +
+    '<div class="channel-avatar" style="' +
+    (avatar ? avatarStyle : 'background-color: var(--divider-color);') +
+    '"></div>' +
     '<div class="video-details">' +
     '<h3 class="video-title">' +
     video.title +
@@ -122,6 +136,7 @@ function loadHomeVideos(tab, page, replace) {
   const grid = document.getElementById('video-grid');
   if (!grid || HOME_STATE.loading) return;
   HOME_STATE.loading = true;
+  HOME_STATE.page = page;
   const container = grid.parentElement || grid;
   let url;
   if (tab === 'popular') {
@@ -236,10 +251,30 @@ function initHomeView() {
   const grid = document.getElementById('video-grid');
   if (!grid) return;
   bindHomeTagInteractions();
+  bindHomeScroll();
   if (grid.dataset.homeInitialized === 'true') return;
   grid.dataset.homeInitialized = 'true';
   HOME_STATE.currentTab = 'rcmd';
   HOME_STATE.page = 1;
   HOME_STATE.finished = false;
   loadHomeVideos('rcmd', 1, true);
+}
+
+function handleHomeScroll() {
+  const view = document.getElementById('view-home');
+  const grid = document.getElementById('video-grid');
+  if (!view || view.hidden) return;
+  if (!grid || HOME_STATE.loading || HOME_STATE.finished) return;
+  const rect = grid.getBoundingClientRect();
+  const threshold = 300;
+  if (rect.bottom - window.innerHeight <= threshold) {
+    const nextPage = (HOME_STATE.page || 1) + 1;
+    loadHomeVideos(HOME_STATE.currentTab, nextPage, false);
+  }
+}
+
+function bindHomeScroll() {
+  if (window.__btubeHomeScrollBound) return;
+  window.__btubeHomeScrollBound = true;
+  window.addEventListener('scroll', handleHomeScroll);
 }

@@ -592,8 +592,6 @@ body {
   border-radius: 50%;
   background-color: var(--divider-color);
   margin-right: 24px;
-  background-image: url('://picsum.photos/100/100?random=99');
-  background-size: cover;
 }
 
 .profile-info h1 {
@@ -636,6 +634,157 @@ body {
 
 .tab-content.active {
   display: block;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.timeline-day {
+  padding: 12px 0;
+}
+
+.timeline-date {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.timeline-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.timeline-side {
+  width: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+}
+
+.timeline-line {
+  flex: 1;
+  width: 2px;
+  background-color: var(--divider-color);
+  margin-top: 4px;
+}
+
+.timeline-content {
+  flex: 1;
+  padding: 12px 16px;
+  background-color: var(--surface-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.timeline-remove {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-chip);
+}
+
+.timeline-remove:hover {
+  background-color: var(--hover-color);
+}
+
+.timeline-main {
+  display: flex;
+  gap: 12px;
+}
+
+.timeline-thumb {
+  width: 120px;
+  height: 68px;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: #000;
+}
+
+.timeline-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.timeline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.timeline-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.profile-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.profile-history-header span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.history-clear-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-btn);
+  color: var(--primary-color);
+  font-size: 12px;
+}
+
+.history-clear-btn:hover {
+  background-color: var(--hover-color);
 }
 
 .video-page-container {
@@ -783,6 +932,31 @@ body {
   height: 100%;
   object-fit: contain;
   background-color: #000;
+}
+
+.btube-danmaku-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.btube-danmaku-item {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  animation: btube-danmaku-move 8s linear;
+}
+
+@keyframes btube-danmaku-move {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 .btube-video-error {
@@ -1050,6 +1224,32 @@ body {
   color: var(--text-secondary);
 }
 
+.btube-episodes {
+  padding: 12px 0;
+}
+
+.btube-episode-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btube-episode-chip {
+  border: 1px solid var(--divider-color);
+  background-color: transparent;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.btube-episode-chip-active {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
 .btube-comments-section {
   padding-top: 4px;
   display: none;
@@ -1077,6 +1277,13 @@ body {
 .btube-comment-text {
   font-size: 14px;
   margin-top: 4px;
+}
+
+.btube-reply-more {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--primary-color);
+  cursor: pointer;
 }
 
 .btube-reply-btn {
@@ -1272,9 +1479,10 @@ body {
   background-color: rgba(255,255,255,0.6);
   z-index: 2;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s ease;
 }
-.loader-overlay.visible { opacity: 1; }
+.loader-overlay.visible { opacity: 1; pointer-events: auto; }
 .loader-spinner {
   width: 28px;
   height: 28px;
@@ -1306,41 +1514,74 @@ body {
 .user-card {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px 18px;
   background-color: var(--surface-color);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-1);
   cursor: pointer;
   min-width: 260px;
+  border: 1px solid var(--divider-color);
+  gap: 12px;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s, border-color 0.2s;
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+  background-color: var(--hover-color);
+  border-color: transparent;
 }
 
 .user-avatar {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background-color: var(--divider-color);
-  margin-right: 12px;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .user-name {
   font-weight: 500;
   margin-bottom: 4px;
+  font-size: 15px;
 }
 
 .user-meta {
   font-size: 13px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .empty-result {
   padding: 24px 0;
   color: var(--text-secondary);
   font-size: 14px;
+}
+
+.search-load-more {
+  margin: 16px auto 0;
+  display: block;
+  padding: 8px 16px;
+  border-radius: var(--radius-btn);
+  border: none;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: #fff;
+  font-size: 13px;
+}
+
+.search-load-more[disabled] {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .sidebar-collapsed .sidebar {

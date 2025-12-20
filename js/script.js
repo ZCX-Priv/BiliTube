@@ -37,7 +37,7 @@ function t(key) {
 }
 
 const STORAGE_DB_NAME = 'btube-app';
-const STORAGE_DB_VERSION = 1;
+const STORAGE_DB_VERSION = 3;
 const STORAGE_STORE_NAME = 'kv';
 
 const storageState = {
@@ -62,6 +62,13 @@ function openStorageDb() {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORAGE_STORE_NAME)) {
         db.createObjectStore(STORAGE_STORE_NAME);
+      }
+      if (db.objectStoreNames.contains('watch_history')) {
+        db.deleteObjectStore('watch_history');
+      }
+      const store = db.createObjectStore('watch_history', { keyPath: 'key', autoIncrement: true });
+      if (!store.indexNames.contains('ts')) {
+        store.createIndex('ts', 'ts', { unique: false });
       }
     };
     request.onsuccess = function () {
@@ -127,6 +134,97 @@ function storageRemoveItem(key) {
     const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORAGE_STORE_NAME);
     store.delete(key);
+  });
+}
+
+const WATCH_HISTORY_STORE = 'watch_history';
+
+function btubeRecordWatchHistory(entry) {
+  if (!entry || !entry.id) return;
+  openStorageDb().then((db) => {
+    if (!db) return;
+    if (!db.objectStoreNames.contains(WATCH_HISTORY_STORE)) return;
+    const tx = db.transaction(WATCH_HISTORY_STORE, 'readwrite');
+    const store = tx.objectStore(WATCH_HISTORY_STORE);
+    const now = Date.now();
+    const data = {
+      id: entry.id,
+      title: entry.title || '',
+      cover: entry.cover || '',
+      channel: entry.channel || '',
+      views: typeof entry.views === 'number' ? entry.views : 0,
+      duration: typeof entry.duration === 'number' ? entry.duration : 0,
+      ts: typeof entry.ts === 'number' ? entry.ts : now
+    };
+    store.add(data);
+  });
+}
+
+function btubeQueryWatchHistory(limit) {
+  const max = typeof limit === 'number' && limit > 0 ? limit : Infinity;
+  return openStorageDb().then((db) => {
+    if (!db) return [];
+    if (!db.objectStoreNames.contains(WATCH_HISTORY_STORE)) return [];
+    return new Promise((resolve) => {
+      const tx = db.transaction(WATCH_HISTORY_STORE, 'readonly');
+      const store = tx.objectStore(WATCH_HISTORY_STORE);
+      let source = store;
+      if (store.indexNames && store.indexNames.contains && store.indexNames.contains('ts')) {
+        source = store.index('ts');
+      }
+      const direction = 'prev';
+      const request = source.openCursor(null, direction);
+      const items = [];
+      request.onsuccess = function () {
+        const cursor = request.result;
+        if (!cursor) {
+          return;
+        }
+        const value = cursor.value || {};
+        const key =
+          cursor.primaryKey != null
+            ? cursor.primaryKey
+            : value.key != null
+            ? value.key
+            : null;
+        if (key != null && !value.key) {
+          value.key = key;
+        }
+        items.push(value);
+        if (items.length >= max) {
+          return;
+        }
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+        resolve(items);
+      };
+      tx.onerror = function () {
+        resolve(items);
+      };
+    });
+  });
+}
+
+function btubeDeleteWatchHistoryByKey(key) {
+  if (key == null) return;
+  const numKey = Number(key);
+  openStorageDb().then((db) => {
+    if (!db) return;
+    if (!db.objectStoreNames.contains(WATCH_HISTORY_STORE)) return;
+    const tx = db.transaction(WATCH_HISTORY_STORE, 'readwrite');
+    const store = tx.objectStore(WATCH_HISTORY_STORE);
+    store.delete(numKey);
+  });
+}
+
+function btubeClearWatchHistory() {
+  openStorageDb().then((db) => {
+    if (!db) return;
+    if (!db.objectStoreNames.contains(WATCH_HISTORY_STORE)) return;
+    const tx = db.transaction(WATCH_HISTORY_STORE, 'readwrite');
+    const store = tx.objectStore(WATCH_HISTORY_STORE);
+    store.clear();
   });
 }
 
@@ -228,40 +326,7 @@ function updateThemeIcon(isDark) {
 function initVideoGrid() {
   const videoGrid = document.getElementById('video-grid');
   if (!videoGrid) return;
-
-  const mockVideos = [
-    { title: "Building a Website in 10 Minutes", channel: "Web Dev Simplified", views: "1.2M views", time: "2 days ago", duration: "10:05" },
-    { title: "Material Design 3 Tutorial", channel: "Google Design", views: "500K views", time: "1 week ago", duration: "15:30" },
-    { title: "Top 10 Programming Languages 2024", channel: "Traversy Media", views: "2.5M views", time: "3 days ago", duration: "12:45" },
-    { title: "Relaxing Jazz Music", channel: "Coffee Shop Vibes", views: "10M views", time: "1 month ago", duration: "1:30:00" },
-    { title: "Learn React JS - Full Course", channel: "FreeCodeCamp", views: "800K views", time: "5 days ago", duration: "4:20:10" },
-    { title: "Funny Cat Compilation", channel: "MeowTube", views: "5M views", time: "2 weeks ago", duration: "8:15" },
-    { title: "SpaceX Launch Highlights", channel: "SpaceX", views: "3M views", time: "1 day ago", duration: "25:00" },
-    { title: "How to Cook the Perfect Steak", channel: "Gordon Ramsay", views: "15M views", time: "1 year ago", duration: "10:00" },
-    { title: "Travel Vlog: Japan", channel: "Wanderlust", views: "200K views", time: "4 days ago", duration: "18:20" },
-    { title: "Advanced CSS Animations", channel: "Kevin Powell", views: "300K views", time: "2 weeks ago", duration: "14:50" },
-    { title: "History of the Internet", channel: "Veritasium", views: "4M views", time: "3 months ago", duration: "22:15" },
-    { title: "Gaming Setup Tour 2025", channel: "TechSource", views: "1.5M views", time: "1 week ago", duration: "11:30" }
-  ];
-
-  withLoader(videoGrid, () => {
-    videoGrid.innerHTML = mockVideos.map((video, index) => `
-      <div class="video-card" onclick="window.location.hash='#/video/${index}'">
-        <div class="thumbnail-container">
-          <img src="://picsum.photos/300/200?random=${index}" alt="Thumbnail" class="thumbnail-img" loading="lazy">
-          <span class="video-duration">${video.duration}</span>
-        </div>
-        <div class="video-info">
-          <div class="channel-avatar" style="background-image: url('://picsum.photos/40/40?random=${index + 100}'); background-size: cover;"></div>
-          <div class="video-details">
-            <h3 class="video-title">${video.title}</h3>
-            <div class="channel-name">${video.channel}</div>
-            <div class="video-meta">${video.views} • ${video.time}</div>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  });
+  videoGrid.innerHTML = '';
 }
 
 /* --- Search Suggestions --- */
@@ -569,54 +634,267 @@ function handleRouteChange() {
   }
 }
 
-function initProfileView() {
-  const view = document.getElementById('view-profile');
-  if (!view || view.dataset.initialized === 'true') return;
-  view.dataset.initialized = 'true';
+function btubeLoadProfileHeader(view) {
+  if (!view) return;
+  const avatarEl = view.querySelector('.profile-avatar');
+  const nameEl = view.querySelector('.profile-info h1');
+  const bioEl = view.querySelector('.profile-info p');
+  const url =
+    '/proxy?u=' +
+    encodeURIComponent('https://api.bilibili.com/x/web-interface/nav');
+  fetch(url)
+    .then((res) => {
+      if (!res.ok) throw new Error('network');
+      return res.json();
+    })
+    .then((json) => {
+      if (!json || typeof json.code !== 'number' || json.code !== 0 || !json.data) {
+        throw new Error('nav_api');
+      }
+      const data = json.data || {};
+      const uname = data.uname || data.username || '';
+      const face = data.face || '';
+      const sign = data.sign || '';
+      if (avatarEl) {
+        let avatar = face;
+        if (avatar && typeof homeParseCoverUrl === 'function') {
+          avatar = homeParseCoverUrl(avatar);
+        }
+        if (avatar) {
+          avatarEl.style.backgroundImage = "url('" + avatar + "')";
+        } else {
+          avatarEl.style.backgroundImage = '';
+        }
+      }
+      if (nameEl) {
+        nameEl.textContent = uname || '未登录用户';
+      }
+      if (bioEl) {
+        if (sign) {
+          bioEl.textContent = sign;
+        } else {
+          bioEl.textContent = '无法获取账号信息，请确认已登录并配置 Cookie';
+        }
+      }
+    })
+    .catch(() => {
+      if (nameEl) {
+        nameEl.textContent = '未登录用户';
+      }
+      if (bioEl) {
+        bioEl.textContent = '无法获取账号信息，请确认已登录并配置 Cookie';
+      }
+    });
+}
 
-  const tabs = view.querySelectorAll('.tab-btn');
-  const contents = view.querySelectorAll('.tab-content');
-
-  tabs.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.tab;
-      tabs.forEach(b => b.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      const panel = view.querySelector('#' + target);
-      if (panel) panel.classList.add('active');
+function btubeRenderProfileHistory(view) {
+  const recentGrid =
+    (view && view.querySelector('#recent-grid')) ||
+    document.getElementById('recent-grid');
+  if (!recentGrid) return;
+  btubeQueryWatchHistory().then((items) => {
+    if (!items || !items.length) {
+      recentGrid.innerHTML =
+        '<div class="empty-result">暂无观看历史</div>';
+      return;
+    }
+    const groups = {};
+    items.forEach((item) => {
+      if (!item) return;
+      const ts = item.ts || Date.now();
+      const d = new Date(ts);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const key = y + '-' + m + '-' + day;
+      const dateLabel = d.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        weekday: 'short'
+      });
+      if (!groups[key]) {
+        groups[key] = { label: dateLabel, items: [] };
+      }
+      groups[key].items.push(item);
+    });
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === b) return 0;
+      return a > b ? -1 : 1;
+    });
+    const html = sortedKeys
+      .map((dateKey) => {
+        const group = groups[dateKey];
+        const dayItems = group.items
+          .map((item, index) => {
+            let cover = item.cover || '';
+            if (cover && typeof homeParseCoverUrl === 'function') {
+              cover = homeParseCoverUrl(cover);
+            }
+            const durationSeconds =
+              typeof item.duration === 'number' ? item.duration : 0;
+            let durationText = '';
+            if (durationSeconds && typeof homeFormatDuration === 'function') {
+              durationText = homeFormatDuration(durationSeconds);
+            }
+            let viewsText = '';
+            if (typeof item.views === 'number' && item.views > 0) {
+              viewsText =
+                item.views.toLocaleString() + ' 次观看';
+            } else if (typeof item.views === 'string') {
+              viewsText = item.views;
+            }
+            let timeText = '';
+            if (item.ts) {
+              try {
+                const d = new Date(item.ts);
+                timeText = d.toLocaleTimeString('zh-CN', {
+                  hour12: false,
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              } catch (e) {}
+            }
+            const rawId = item.id || '';
+            const safeId = encodeURIComponent(rawId || String(index));
+            const channelName = item.channel || '';
+            const metaParts = [];
+            if (channelName) metaParts.push(channelName);
+            if (durationText) metaParts.push(durationText);
+            if (viewsText) metaParts.push(viewsText);
+            const meta = metaParts.join(' · ');
+            const keyAttr =
+              item.key != null ? String(item.key) : '';
+            return (
+              '<div class="timeline-item" data-id="' +
+              rawId +
+              '" data-key="' +
+              keyAttr +
+              '">' +
+              '<div class="timeline-side">' +
+              '<div class="timeline-dot"></div>' +
+              '<div class="timeline-line"></div>' +
+              '</div>' +
+              '<div class="timeline-content">' +
+              '<div class="timeline-header-row">' +
+              '<div class="timeline-time">' +
+              timeText +
+              '</div>' +
+              '<button type="button" class="timeline-remove" data-action="history-remove">删除</button>' +
+              '</div>' +
+              '<div class="timeline-main">' +
+              (cover
+                ? '<div class="timeline-thumb"><img src="' +
+                  cover +
+                  '" alt="Thumbnail" loading="lazy"></div>'
+                : '') +
+              '<div class="timeline-text">' +
+              '<div class="timeline-title">' +
+              (item.title || '') +
+              '</div>' +
+              (meta
+                ? '<div class="timeline-meta">' +
+                  meta +
+                  '</div>'
+                : '') +
+              '</div>' +
+              '</div>' +
+              '</div>' +
+              '</div>'
+            );
+          })
+          .join('');
+        return (
+          '<div class="timeline-day">' +
+          '<div class="timeline-date">' +
+          group.label +
+          '</div>' +
+          '<div class="timeline-items">' +
+          dayItems +
+          '</div>' +
+          '</div>'
+        );
+      })
+      .join('');
+    recentGrid.innerHTML = html;
+    const lines = recentGrid.querySelectorAll('.timeline-items');
+    lines.forEach((groupEl) => {
+      const itemsEls = groupEl.querySelectorAll('.timeline-item');
+      if (itemsEls.length) {
+        const last = itemsEls[itemsEls.length - 1];
+        const lineEl = last.querySelector('.timeline-line');
+        if (lineEl) {
+          lineEl.style.display = 'none';
+        }
+      }
     });
   });
+}
 
-  const recentGrid = view.querySelector('#recent-grid');
-  if (recentGrid) {
-    recentGrid.innerHTML = `
-      <div class="video-card">
-        <div class="thumbnail-container">
-           <img src="://picsum.photos/300/200?random=20" class="thumbnail-img" loading="lazy">
-           <span class="video-duration">10:05</span>
-        </div>
-        <div class="video-info">
-           <div class="video-details">
-              <h3 class="video-title">Watched Video 1</h3>
-              <div class="channel-name">Channel A</div>
-           </div>
-        </div>
-      </div>
-      <div class="video-card">
-        <div class="thumbnail-container">
-           <img src="://picsum.photos/300/200?random=21" class="thumbnail-img" loading="lazy">
-           <span class="video-duration">5:30</span>
-        </div>
-        <div class="video-info">
-           <div class="video-details">
-              <h3 class="video-title">Watched Video 2</h3>
-              <div class="channel-name">Channel B</div>
-           </div>
-        </div>
-      </div>
-    `;
+function initProfileView() {
+  const view = document.getElementById('view-profile');
+  if (!view) return;
+
+  if (!view.dataset.tabsBound) {
+    const tabs = view.querySelectorAll('.tab-btn');
+    const contents = view.querySelectorAll('.tab-content');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        tabs.forEach(b => b.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = view.querySelector('#' + target);
+        if (panel) panel.classList.add('active');
+      });
+    });
+    view.dataset.tabsBound = 'true';
   }
+  if (!view.dataset.profileLoaded) {
+    btubeLoadProfileHeader(view);
+    view.dataset.profileLoaded = 'true';
+  }
+  if (!view.dataset.historyBound) {
+    const recentGrid =
+      view.querySelector('#recent-grid') ||
+      document.getElementById('recent-grid');
+    if (recentGrid) {
+      recentGrid.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('[data-action="history-remove"]');
+        if (removeBtn) {
+          e.stopPropagation();
+          const itemEl = removeBtn.closest('.timeline-item');
+          if (itemEl) {
+            const key = itemEl.getAttribute('data-key');
+            if (key != null && key !== '') {
+              btubeDeleteWatchHistoryByKey(key);
+            }
+            btubeRenderProfileHistory(view);
+          }
+          return;
+        }
+        const itemEl = e.target.closest('.timeline-item');
+        if (itemEl) {
+          const id = itemEl.getAttribute('data-id') || '';
+          if (id) {
+            window.location.hash =
+              '#/video/' + encodeURIComponent(id);
+          }
+        }
+      });
+    }
+    const clearBtn =
+      view.querySelector('[data-action="history-clear"]') ||
+      document.querySelector('[data-action="history-clear"]');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        btubeClearWatchHistory();
+        btubeRenderProfileHistory(view);
+      });
+    }
+    view.dataset.historyBound = 'true';
+  }
+  btubeRenderProfileHistory(view);
 }
 
 function initVideoView(id) {
@@ -628,9 +906,9 @@ function initVideoView(id) {
     videoViewBound = true;
   }
 
-  const title = view.querySelector('#btube-video-title');
-  if (title && id != null) {
-    title.textContent = '10 分钟搭建一个网站 #' + id;
+  const rawId = id != null ? decodeURIComponent(id) : '';
+  if (typeof btubeLoadVideoById === 'function' && rawId) {
+    btubeLoadVideoById(rawId);
   }
 }
 
@@ -648,6 +926,7 @@ function bindVideoView(view) {
   const tabs = view.querySelectorAll('.btube-tab');
   const details = view.querySelector('#btube-details-content');
   const comments = view.querySelector('#btube-comments-content');
+  const panelBody = view.querySelector('.btube-panel-body');
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -664,6 +943,25 @@ function bindVideoView(view) {
   if (details && comments) {
     details.style.display = 'block';
     comments.style.display = 'none';
+  }
+
+   if (panelBody && comments && tabs.length) {
+    panelBody.addEventListener('scroll', () => {
+      var activeTab = null;
+      tabs.forEach(t => {
+        if (t.classList.contains('active')) {
+          activeTab = t;
+        }
+      });
+      if (!activeTab || activeTab.dataset.tab !== 'comments') {
+        return;
+      }
+      const distance =
+        panelBody.scrollHeight - panelBody.scrollTop - panelBody.clientHeight;
+      if (distance <= 80 && typeof playerLoadMoreComments === 'function') {
+        playerLoadMoreComments(false);
+      }
+    });
   }
 
   const replyButtons = view.querySelectorAll('.btube-reply-btn');
@@ -734,6 +1032,9 @@ function bindVideoView(view) {
   if (danmakuToggle) {
     danmakuToggle.addEventListener('click', () => {
       danmakuToggle.classList.toggle('active');
+      if (typeof playerSetDanmakuEnabled === 'function') {
+        playerSetDanmakuEnabled(danmakuToggle.classList.contains('active'));
+      }
     });
   }
 
@@ -796,6 +1097,56 @@ function initSearchView(type, keyword) {
         goToSearch(t, currentKeyword || (label ? label.textContent.replace(/^搜索:\s*/, '') : ''));
       });
     });
+
+    const loadMoreVideosBtn = document.getElementById('search-video-more');
+    if (loadMoreVideosBtn && !loadMoreVideosBtn.dataset.bound) {
+      loadMoreVideosBtn.dataset.bound = 'true';
+      loadMoreVideosBtn.addEventListener('click', () => {
+        if (typeof searchLoadMoreVideos === 'function') {
+          searchLoadMoreVideos();
+        }
+      });
+    }
+
+    const loadMoreUsersBtn = document.getElementById('search-user-more');
+    if (loadMoreUsersBtn && !loadMoreUsersBtn.dataset.bound) {
+      loadMoreUsersBtn.dataset.bound = 'true';
+      loadMoreUsersBtn.addEventListener('click', () => {
+        if (typeof searchLoadMoreUsers === 'function') {
+          searchLoadMoreUsers();
+        }
+      });
+    }
+
+    if (!window.__btubeSearchScrollBound) {
+      window.__btubeSearchScrollBound = true;
+      window.addEventListener('scroll', () => {
+        const searchView = document.getElementById('view-search');
+        if (!searchView || searchView.hidden) return;
+        const activeTab = searchView.querySelector('.search-tab.active');
+        const activeTypeNow = activeTab ? activeTab.dataset.type : 'videos';
+        let container = null;
+        if (activeTypeNow === 'users') {
+          container = document.getElementById('search-user-list');
+        } else {
+          container = document.getElementById('search-video-grid');
+        }
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const threshold = 300;
+        if (rect.bottom - window.innerHeight <= threshold) {
+          if (activeTypeNow === 'users') {
+            if (typeof searchLoadMoreUsers === 'function') {
+              searchLoadMoreUsers();
+            }
+          } else {
+            if (typeof searchLoadMoreVideos === 'function') {
+              searchLoadMoreVideos();
+            }
+          }
+        }
+      });
+    }
 
     view.dataset.bound = 'true';
   }

@@ -553,7 +553,11 @@ function handleRouteChange() {
   });
 
   if (viewId === 'view-home') {
-    initVideoGrid();
+    if (typeof initHomeView === 'function') {
+      initHomeView();
+    } else {
+      initVideoGrid();
+    }
   } else if (viewId === 'view-subscriptions') {
     initSubscriptionsView();
   } else if (viewId === 'view-profile') {

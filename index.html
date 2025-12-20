@@ -46,6 +46,11 @@
     </div>
 
     <div class="header-right">
+      <button class="icon-btn search-icon-mobile" id="search-toggle-mobile" aria-label="搜索">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </button>
       <button class="icon-btn" id="theme-toggle" title="切换深色模式">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" id="theme-icon">
           <!-- Moon Icon (Default) -->
@@ -182,107 +187,140 @@
       <section id="view-video" class="view" hidden>
         <div class="video-page-container">
           <div class="video-main">
-            <div class="player-container">
-              <div class="player-placeholder">
-                <div class="play-btn-overlay">
-                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <div class="btube-video-layout">
+              <div class="btube-video-section">
+                <div class="btube-video-container">
+                  <video
+                    id="btube-video"
+                    class="btube-video-element"
+                    controls
+                    playsinline
+                    webkit-playsinline
+                    preload="metadata"
+                    poster="https://via.placeholder.com/1280x720/000000/FFFFFF?text=BTube+Video+Player"
+                    data-src-hd="https://www.w3schools.com/html/mov_bbb.mp4"
+                    data-src-sd="https://www.w3schools.com/html/mov_bbb.mp4"
+                    data-quality="hd"
+                  >
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    您的浏览器不支持 HTML5 视频。
+                  </video>
+                  <div id="btube-video-error" class="btube-video-error"></div>
                 </div>
               </div>
-            </div>
-            
-            <div class="video-primary-info">
-              <h1>10 分钟搭建一个网站</h1>
-              <div class="video-stats">
-                <span>1,234,567 次观看 • 2025 年 12 月 14 日</span>
-                <div class="actions">
-                  <div class="action-btn">
-                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/></svg>
-                     <span>12K</span>
+
+              <aside class="btube-right-panel">
+                <div class="btube-panel-header">
+                  <div class="btube-tabs">
+                    <button type="button" class="btube-tab active" data-tab="details">视频详情</button>
+                    <button type="button" class="btube-tab" data-tab="comments">评论区</button>
                   </div>
-                  <div class="action-btn">
-                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
-                     <span>不喜欢</span>
-                  </div>
-                  <div class="action-btn">
-                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z"/></svg>
-                     <span>分享</span>
+                  <div class="btube-header-actions">
+                    <button type="button" class="btube-icon-btn btube-panel-toggle" data-action="toggle-panel">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M3 6h18v2H3V6zm0 5h12v2H3v-2zm0 5h18v2H3v-2z"/>
+                      </svg>
+                    </button>
+                    <button type="button" class="btube-icon-btn video-back-btn" data-action="video-back" aria-label="返回">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                      </svg>
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div class="channel-row">
-              <div class="channel-avatar" style="width: 48px; height: 48px; background-image: url('https://picsum.photos/50/50?random=101'); background-size: cover;"></div>
-              <div class="video-details" style="margin-left: 12px;">
-                <div class="channel-name" style="color: var(--text-primary); font-weight: 500;">Web Dev Simplified</div>
-                <div class="video-meta">150 万订阅</div>
-              </div>
-              <button class="subscribe-btn">订阅</button>
-            </div>
+                <div class="btube-panel-body">
+                  <div id="btube-details-content">
+                    <div class="btube-panel-video-controls">
+                      <button type="button" class="btube-control-chip" id="btube-quality-toggle">
+                        <span class="btube-chip-icon">HD</span>
+                        <span class="btube-control-label">高清</span>
+                      </button>
+                      <button type="button" class="btube-control-chip" id="btube-danmaku-toggle">
+                        <span class="btube-chip-icon">弹</span>
+                        <span>弹幕开关</span>
+                      </button>
+                    </div>
 
-            <div class="video-description">
-              <p>在本视频中，我们将用 10 分钟搭建一个响应式网站，适合想要入门前端开发的同学。</p>
-            </div>
+                    <div class="btube-author-card">
+                      <div class="btube-avatar" id="btube-author-avatar">A</div>
+                      <div class="btube-author-info">
+                        <div class="btube-author-name" id="btube-author-name">视频作者名称</div>
+                        <div class="btube-author-bio" id="btube-author-bio">这里是作者的简介信息，通常比较简短。</div>
+                      </div>
+                    </div>
 
-            <div class="comments-section">
-              <h3>245 条评论</h3>
-              <div class="comment">
-                <div class="comment-avatar" style="background-image: url('https://picsum.photos/40/40?random=200'); background-size: cover;"></div>
-                <div class="comment-content">
-                  <div class="comment-header">
-                    <span class="comment-author">用户 123</span>
-                    <span class="comment-time">2 天前</span>
+                    <div class="btube-video-info">
+                      <h1 class="btube-video-title" id="btube-video-title">10 分钟搭建一个网站</h1>
+                      <div class="btube-video-desc" id="btube-video-desc">
+                        在本视频中，我们将用 10 分钟搭建一个响应式网站，适合想要入门前端开发的同学。
+                      </div>
+                    </div>
+
+                    <div class="btube-recommendations">
+                      <div class="btube-section-title">相关推荐</div>
+                      <div class="btube-rec-item">
+                        <div class="btube-rec-thumb"></div>
+                        <div class="btube-rec-info">
+                          <div class="btube-rec-title">如何使用 CSS Grid 实现复杂布局</div>
+                          <div class="btube-rec-meta">12 万次观看 · 2 天前</div>
+                        </div>
+                      </div>
+                      <div class="btube-rec-item">
+                        <div class="btube-rec-thumb"></div>
+                        <div class="btube-rec-info">
+                          <div class="btube-rec-title">Material Design 3 设计指南深度解析</div>
+                          <div class="btube-rec-meta">5.6 万次观看 · 1 周前</div>
+                        </div>
+                      </div>
+                      <div class="btube-rec-item">
+                        <div class="btube-rec-thumb"></div>
+                        <div class="btube-rec-info">
+                          <div class="btube-rec-title">2024 年前端开发趋势展望</div>
+                          <div class="btube-rec-meta">8.9 万次观看 · 3 天前</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="comment-text">非常棒的教程，对我帮助很大。</div>
-                </div>
-              </div>
-               <div class="comment">
-                <div class="comment-avatar" style="background-image: url('https://picsum.photos/40/40?random=201'); background-size: cover;"></div>
-                <div class="comment-content">
-                  <div class="comment-header">
-                    <span class="comment-author">Coder X</span>
-                    <span class="comment-time">1 天前</span>
-                  </div>
-                  <div class="comment-text">可以下次出一期 JavaScript 的视频吗？</div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="video-sidebar">
-             <div class="related-video-card">
-               <div class="related-thumb">
-                 <img src="https://picsum.photos/168/94?random=50" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">
-                 <span class="video-duration">5:00</span>
-               </div>
-               <div class="related-info">
-                 <h4>Advanced CSS Tricks</h4>
-                 <div class="related-meta">Web Dev Simplified</div>
-                 <div class="related-meta">200K views</div>
-               </div>
-             </div>
-             <div class="related-video-card">
-               <div class="related-thumb">
-                 <img src="https://picsum.photos/168/94?random=51" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">
-                 <span class="video-duration">8:20</span>
-               </div>
-               <div class="related-info">
-                 <h4>Learn React in 2025</h4>
-                 <div class="related-meta">Web Dev Simplified</div>
-                 <div class="related-meta">500K views</div>
-               </div>
-             </div>
-             <div class="related-video-card">
-               <div class="related-thumb">
-                 <img src="https://picsum.photos/168/94?random=52" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">
-                 <span class="video-duration">12:15</span>
-               </div>
-               <div class="related-info">
-                 <h4>Full Stack Roadmap</h4>
-                 <div class="related-meta">Traversy Media</div>
-                 <div class="related-meta">1M views</div>
-               </div>
-             </div>
+                  <div id="btube-comments-content" class="btube-comments-section">
+                    <div class="btube-comment-item">
+                      <div class="btube-avatar btube-avatar-small">U1</div>
+                      <div class="btube-comment-content">
+                        <div class="btube-comment-user">用户甲</div>
+                        <div class="btube-comment-text">这个界面设计得真漂亮，非常符合 Material You 的审美。</div>
+                        <button type="button" class="btube-reply-btn">
+                          <span>评论回复</span>
+                        </button>
+                        <div class="btube-reply-box">
+                          <div class="btube-comment-item btube-comment-reply">
+                            <div class="btube-avatar btube-avatar-xsmall">A</div>
+                            <div class="btube-comment-content">
+                              <div class="btube-comment-user">作者 (回复)</div>
+                              <div class="btube-comment-text">感谢支持。</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="btube-comment-item">
+                      <div class="btube-avatar btube-avatar-small">U2</div>
+                      <div class="btube-comment-content">
+                        <div class="btube-comment-user">用户乙</div>
+                        <div class="btube-comment-text">能不能分享一下 CSS 源码？</div>
+                        <button type="button" class="btube-reply-btn">
+                          <span>评论回复</span>
+                        </button>
+                        <div class="btube-reply-box">
+                          <div class="btube-reply-placeholder">输入回复内容...</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
       </section>

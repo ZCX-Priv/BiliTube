@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function isMobileDevice() {
+  const ua = navigator.userAgent || '';
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+}
+
 const I18N = {
   zh: {
     loading_initializing: '初始化中',
@@ -243,11 +248,11 @@ function initVideoGrid() {
     videoGrid.innerHTML = mockVideos.map((video, index) => `
       <div class="video-card" onclick="window.location.hash='#/video/${index}'">
         <div class="thumbnail-container">
-          <img src="https://picsum.photos/300/200?random=${index}" alt="Thumbnail" class="thumbnail-img" loading="lazy">
+          <img src="://picsum.photos/300/200?random=${index}" alt="Thumbnail" class="thumbnail-img" loading="lazy">
           <span class="video-duration">${video.duration}</span>
         </div>
         <div class="video-info">
-          <div class="channel-avatar" style="background-image: url('https://picsum.photos/40/40?random=${index + 100}'); background-size: cover;"></div>
+          <div class="channel-avatar" style="background-image: url('://picsum.photos/40/40?random=${index + 100}'); background-size: cover;"></div>
           <div class="video-details">
             <h3 class="video-title">${video.title}</h3>
             <div class="channel-name">${video.channel}</div>
@@ -333,6 +338,8 @@ function initSearch() {
   const searchInput = document.querySelector('.search-input');
   const suggestionsBox = document.getElementById('search-suggestions');
   const searchBtn = document.querySelector('.search-btn');
+  const mobileSearchToggle = document.getElementById('search-toggle-mobile');
+  const appHeader = document.querySelector('.app-header');
 
   if (!searchInput || !suggestionsBox) return;
 
@@ -381,8 +388,14 @@ function initSearch() {
   });
 
   document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+    const clickInsideSearch = searchInput.contains(e.target) || suggestionsBox.contains(e.target);
+    if (!clickInsideSearch) {
       suggestionsBox.style.display = 'none';
+      if (appHeader && appHeader.classList.contains('mobile-search-active')) {
+        if (!mobileSearchToggle || !mobileSearchToggle.contains(e.target)) {
+          appHeader.classList.remove('mobile-search-active');
+        }
+      }
     }
   });
 
@@ -402,6 +415,15 @@ function initSearch() {
   if (searchBtn) {
     searchBtn.addEventListener('click', () => {
       triggerSearch();
+    });
+  }
+
+  if (mobileSearchToggle && appHeader) {
+    mobileSearchToggle.addEventListener('click', () => {
+      const active = appHeader.classList.toggle('mobile-search-active');
+      if (active) {
+        searchInput.focus();
+      }
     });
   }
 }
@@ -450,6 +472,9 @@ const routes = {
   '/video': 'view-video',
   '/search': 'view-search'
 };
+
+let videoViewBound = false;
+let lastNonVideoHash = '#/home';
 
 const SUBS_VARIANT_KEY = 'btube-subs-ux-variant';
 const SUBS_METRIC_KEY = 'btube-subs-metrics';
@@ -503,6 +528,10 @@ function handleRouteChange() {
   const param2 = segments[3] || null;
 
   const viewId = routes[path] || 'view-home';
+
+  if (viewId !== 'view-video') {
+    lastNonVideoHash = hash;
+  }
 
   const views = document.querySelectorAll('.view');
   views.forEach(view => {
@@ -558,7 +587,7 @@ function initSubscriptionsView() {
         title: '科技日报 · 最新手机评测',
         time: '2 小时前',
         text: '快来看看我们最新的手机评测！这次的相机升级非常惊艳。',
-        image: 'https://picsum.photos/600/300?random=10'
+        image: '://picsum.photos/600/300?random=10'
       }
     ],
     game: [
@@ -574,7 +603,7 @@ function initSubscriptionsView() {
         title: '音乐人生 · 新歌上线',
         time: '1 天前',
         text: '全新翻唱已上线，一起沉浸在音乐里。',
-        image: 'https://picsum.photos/600/300?random=11'
+        image: '://picsum.photos/600/300?random=11'
       }
     ],
     cook: [
@@ -582,7 +611,7 @@ function initSubscriptionsView() {
         title: '家常菜课堂 · 今晚吃什么',
         time: '3 小时前',
         text: '三道十分钟快手菜，简单好吃，每天都不重样。',
-        image: 'https://picsum.photos/600/300?random=12'
+        image: '://picsum.photos/600/300?random=12'
       }
     ]
   };
@@ -689,7 +718,7 @@ function initProfileView() {
     recentGrid.innerHTML = `
       <div class="video-card">
         <div class="thumbnail-container">
-           <img src="https://picsum.photos/300/200?random=20" class="thumbnail-img" loading="lazy">
+           <img src="://picsum.photos/300/200?random=20" class="thumbnail-img" loading="lazy">
            <span class="video-duration">10:05</span>
         </div>
         <div class="video-info">
@@ -701,7 +730,7 @@ function initProfileView() {
       </div>
       <div class="video-card">
         <div class="thumbnail-container">
-           <img src="https://picsum.photos/300/200?random=21" class="thumbnail-img" loading="lazy">
+           <img src="://picsum.photos/300/200?random=21" class="thumbnail-img" loading="lazy">
            <span class="video-duration">5:30</span>
         </div>
         <div class="video-info">
@@ -718,9 +747,125 @@ function initProfileView() {
 function initVideoView(id) {
   const view = document.getElementById('view-video');
   if (!view) return;
-  const title = view.querySelector('.video-primary-info h1');
+
+  if (!videoViewBound) {
+    bindVideoView(view);
+    videoViewBound = true;
+  }
+
+  const title = view.querySelector('#btube-video-title');
   if (title && id != null) {
-    title.textContent = 'Building a Website in 10 Minutes #' + id;
+    title.textContent = '10 分钟搭建一个网站 #' + id;
+  }
+}
+
+function bindVideoView(view) {
+  if (!view) return;
+
+  const backBtn = view.querySelector('[data-action="video-back"]');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      const target = lastNonVideoHash || '#/home';
+      window.location.hash = target;
+    });
+  }
+
+  const tabs = view.querySelectorAll('.btube-tab');
+  const details = view.querySelector('#btube-details-content');
+  const comments = view.querySelector('#btube-comments-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab === 'comments' ? 'comments' : 'details';
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      if (details && comments) {
+        const showDetails = target === 'details';
+        details.style.display = showDetails ? 'block' : 'none';
+        comments.style.display = showDetails ? 'none' : 'block';
+      }
+    });
+  });
+
+  if (details && comments) {
+    details.style.display = 'block';
+    comments.style.display = 'none';
+  }
+
+  const replyButtons = view.querySelectorAll('.btube-reply-btn');
+  replyButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.btube-comment-item');
+      if (!item) return;
+      const box = item.querySelector('.btube-reply-box');
+      if (!box) return;
+      box.classList.toggle('active');
+    });
+  });
+
+  const video = view.querySelector('#btube-video');
+  const qualityToggle = view.querySelector('#btube-quality-toggle');
+  const danmakuToggle = view.querySelector('#btube-danmaku-toggle');
+  const errorBanner = view.querySelector('#btube-video-error');
+  const panelToggle = view.querySelector('.btube-panel-toggle');
+  const rightPanel = view.querySelector('.btube-right-panel');
+
+  if (video) {
+    video.addEventListener('error', () => {
+      if (errorBanner) {
+        errorBanner.textContent = isMobileDevice()
+          ? '移动端视频加载失败，请检查网络或浏览器设置。'
+          : '视频加载失败，请稍后重试。';
+        errorBanner.style.display = 'block';
+      }
+    });
+  }
+
+  if (qualityToggle && video) {
+    qualityToggle.addEventListener('click', () => {
+      const hdSrc = video.getAttribute('data-src-hd') || '';
+      const sdSrc = video.getAttribute('data-src-sd') || hdSrc;
+      const source = video.querySelector('source');
+      if (!source || !hdSrc) return;
+
+      const currentQuality = video.getAttribute('data-quality') || 'hd';
+      const nextQuality = currentQuality === 'hd' ? 'sd' : 'hd';
+      const nextSrc = nextQuality === 'hd' ? hdSrc : sdSrc;
+
+      if (!nextSrc) return;
+
+      const wasPlaying = !video.paused && !video.ended;
+      video.pause();
+      source.src = nextSrc;
+      video.setAttribute('data-quality', nextQuality);
+      try {
+        video.load();
+      } catch (e) {
+      }
+
+      if (wasPlaying) {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      }
+
+      const label = qualityToggle.querySelector('.btube-control-label');
+      if (label) {
+        label.textContent = nextQuality === 'hd' ? '高清' : '标清';
+      }
+    });
+  }
+
+  if (danmakuToggle) {
+    danmakuToggle.addEventListener('click', () => {
+      danmakuToggle.classList.toggle('active');
+    });
+  }
+
+  if (panelToggle && rightPanel) {
+    panelToggle.addEventListener('click', () => {
+      rightPanel.classList.toggle('btube-right-panel-collapsed');
+    });
   }
 }
 
@@ -811,11 +956,11 @@ function fillSearchVideoResults(keyword) {
     grid.innerHTML = list.map((video, index) => (
       '<div class="video-card" onclick="window.location.hash=\'#/video/' + index + '\'">' +
         '<div class="thumbnail-container">' +
-          '<img src="https://picsum.photos/300/200?random=' + (200 + index) + '" alt="Thumbnail" class="thumbnail-img" loading="lazy">' +
+          '<img src="://picsum.photos/300/200?random=' + (200 + index) + '" alt="Thumbnail" class="thumbnail-img" loading="lazy">' +
           '<span class="video-duration">' + video.duration + '</span>' +
         '</div>' +
         '<div class="video-info">' +
-          '<div class="channel-avatar" style="background-image: url(\'https://picsum.photos/40/40?random=' + (300 + index) + '\'); background-size: cover;"></div>' +
+          '<div class="channel-avatar" style="background-image: url(\'://picsum.photos/40/40?random=' + (300 + index) + '\'); background-size: cover;"></div>' +
           '<div class="video-details">' +
             '<h3 class="video-title">' + video.title + '</h3>' +
             '<div class="channel-name">' + video.channel + '</div>' +
@@ -848,7 +993,7 @@ function fillSearchUserResults(keyword) {
   withLoader(container, () => {
     container.innerHTML = list.map((user, index) => (
       '<div class="user-card">' +
-        '<div class="user-avatar" style="background-image: url(\'https://picsum.photos/64/64?random=' + (400 + index) + '\'); background-size: cover;"></div>' +
+        '<div class="user-avatar" style="background-image: url(\'://picsum.photos/64/64?random=' + (400 + index) + '\'); background-size: cover;"></div>' +
         '<div class="user-info">' +
           '<div class="user-name">' + user.name + '</div>' +
           '<div class="user-meta">' + user.desc + ' · ' + user.followers + ' 关注</div>' +

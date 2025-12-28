@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initStorage().then(() => {
     initLoadingScreen();
     initTheme();
-    biliTubeInitModal();
+    BiliTubeInitModal();
     initSidebar();
     initSearch();
     initTags();
@@ -56,7 +56,7 @@ function t(key) {
   return Object.prototype.hasOwnProperty.call(dict, key) ? dict[key] : key;
 }
 
-const STORAGE_DB_NAME = 'bilitube-app';
+const STORAGE_DB_NAME = 'BiliTube-app';
 const STORAGE_DB_VERSION = 3;
 const STORAGE_STORE_NAME = 'kv';
 
@@ -110,7 +110,7 @@ function initStorage() {
     if (!db) {
       return;
     }
-    const keys = ['theme', 'bilitube-search-history', 'sidebar-collapsed', 'bilitube-subs-ux-variant', 'bilitube-subs-metrics'];
+    const keys = ['theme', 'BiliTube-search-history', 'sidebar-collapsed', 'BiliTube-subs-ux-variant', 'BiliTube-subs-metrics'];
     return Promise.all(keys.map((key) => {
       return new Promise((resolve) => {
         const tx = db.transaction(STORAGE_STORE_NAME, 'readonly');
@@ -159,7 +159,7 @@ function storageRemoveItem(key) {
 
 const WATCH_HISTORY_STORE = 'watch_history';
 
-function biliTubeRecordWatchHistory(entry) {
+function BiliTubeRecordWatchHistory(entry) {
   if (!entry || !entry.id) return;
   openStorageDb().then((db) => {
     if (!db) return;
@@ -180,7 +180,7 @@ function biliTubeRecordWatchHistory(entry) {
   });
 }
 
-function biliTubeQueryWatchHistory(limit) {
+function BiliTubeQueryWatchHistory(limit) {
   const max = typeof limit === 'number' && limit > 0 ? limit : Infinity;
   return openStorageDb().then((db) => {
     if (!db) return [];
@@ -226,7 +226,7 @@ function biliTubeQueryWatchHistory(limit) {
   });
 }
 
-function biliTubeDeleteWatchHistoryByKey(key) {
+function BiliTubeDeleteWatchHistoryByKey(key) {
   if (key == null) return;
   const numKey = Number(key);
   openStorageDb().then((db) => {
@@ -238,7 +238,7 @@ function biliTubeDeleteWatchHistoryByKey(key) {
   });
 }
 
-function biliTubeClearWatchHistory() {
+function BiliTubeClearWatchHistory() {
   openStorageDb().then((db) => {
     if (!db) return;
     if (!db.objectStoreNames.contains(WATCH_HISTORY_STORE)) return;
@@ -248,20 +248,20 @@ function biliTubeClearWatchHistory() {
   });
 }
 
-const biliTubeModalState = {
+const BiliTubeModalState = {
   resolve: null
 };
 
-function biliTubeInitModal() {
-  const modal = document.getElementById('btube-modal');
+function BiliTubeInitModal() {
+  const modal = document.getElementById('BiliTube-modal');
   if (!modal) return;
   const cancelBtn = modal.querySelector('[data-action="modal-cancel"]');
   const confirmBtn = modal.querySelector('[data-action="modal-confirm"]');
   const close = (ok) => {
     modal.hidden = true;
-    if (biliTubeModalState.resolve) {
-      biliTubeModalState.resolve(ok);
-      biliTubeModalState.resolve = null;
+    if (BiliTubeModalState.resolve) {
+      BiliTubeModalState.resolve(ok);
+      BiliTubeModalState.resolve = null;
     }
   };
   if (cancelBtn) {
@@ -281,14 +281,14 @@ function biliTubeInitModal() {
   });
 }
 
-function biliTubeConfirm(message) {
-  const modal = document.getElementById('btube-modal');
+function BiliTubeConfirm(message) {
+  const modal = document.getElementById('BiliTube-modal');
   if (!modal) {
     const ok = window.confirm(message);
     return Promise.resolve(ok);
   }
-  const titleEl = document.getElementById('btube-modal-title');
-  const bodyEl = document.getElementById('btube-modal-body');
+  const titleEl = document.getElementById('BiliTube-modal-title');
+  const bodyEl = document.getElementById('BiliTube-modal-body');
   if (titleEl) {
     titleEl.textContent = '确认操作';
   }
@@ -297,7 +297,7 @@ function biliTubeConfirm(message) {
   }
   modal.hidden = false;
   return new Promise((resolve) => {
-    biliTubeModalState.resolve = resolve;
+    BiliTubeModalState.resolve = resolve;
   });
 }
 
@@ -403,7 +403,7 @@ function initVideoGrid() {
 }
 
 /* --- Search Suggestions --- */
-const SEARCH_HISTORY_KEY = 'bilitube-search-history';
+const SEARCH_HISTORY_KEY = 'BiliTube-search-history';
 
 function escapeHtml(text) {
   return text
@@ -614,8 +614,8 @@ const routes = {
 let videoViewBound = false;
 let lastNonVideoHash = '#/home';
 
-const SUBS_VARIANT_KEY = 'bilitube-subs-ux-variant';
-const SUBS_METRIC_KEY = 'bilitube-subs-metrics';
+const SUBS_VARIANT_KEY = 'BiliTube-subs-ux-variant';
+const SUBS_METRIC_KEY = 'BiliTube-subs-metrics';
 
 function getSubsVariant() {
   let v = storageGetItem(SUBS_VARIANT_KEY);
@@ -707,7 +707,7 @@ function handleRouteChange() {
   }
 }
 
-function biliTubeLoadProfileHeader(view) {
+function BiliTubeLoadProfileHeader(view) {
   if (!view) return;
   const avatarEl = view.querySelector('.profile-avatar');
   const nameEl = view.querySelector('.profile-info h1');
@@ -760,12 +760,12 @@ function biliTubeLoadProfileHeader(view) {
     });
 }
 
-function biliTubeRenderProfileHistory(view) {
+function BiliTubeRenderProfileHistory(view) {
   const recentGrid =
     (view && view.querySelector('#recent-grid')) ||
     document.getElementById('recent-grid');
   if (!recentGrid) return;
-  biliTubeQueryWatchHistory().then((items) => {
+  BiliTubeQueryWatchHistory().then((items) => {
     if (!items || !items.length) {
       recentGrid.innerHTML =
         '<div class="empty-result">暂无观看历史</div>';
@@ -924,7 +924,7 @@ function initProfileView() {
     view.dataset.tabsBound = 'true';
   }
   if (!view.dataset.profileLoaded) {
-    biliTubeLoadProfileHeader(view);
+    BiliTubeLoadProfileHeader(view);
     view.dataset.profileLoaded = 'true';
   }
   if (!view.dataset.historyBound) {
@@ -943,13 +943,13 @@ function initProfileView() {
             const msg = titleText
               ? '确定删除这条观看记录吗？\n《' + titleText + '》'
               : '确定删除这条观看记录吗？';
-            biliTubeConfirm(msg).then((ok) => {
+            BiliTubeConfirm(msg).then((ok) => {
               if (!ok) return;
               const key = itemEl.getAttribute('data-key');
               if (key != null && key !== '') {
-                biliTubeDeleteWatchHistoryByKey(key);
+                BiliTubeDeleteWatchHistoryByKey(key);
               }
-              biliTubeRenderProfileHistory(view);
+              BiliTubeRenderProfileHistory(view);
             });
           }
           return;
@@ -969,16 +969,16 @@ function initProfileView() {
       document.querySelector('[data-action="history-clear"]');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
-        biliTubeConfirm('确定清空所有观看历史吗？').then((ok) => {
+        BiliTubeConfirm('确定清空所有观看历史吗？').then((ok) => {
           if (!ok) return;
-          biliTubeClearWatchHistory();
-          biliTubeRenderProfileHistory(view);
+          BiliTubeClearWatchHistory();
+          BiliTubeRenderProfileHistory(view);
         });
       });
     }
     view.dataset.historyBound = 'true';
   }
-  biliTubeRenderProfileHistory(view);
+  BiliTubeRenderProfileHistory(view);
 }
 
 function initVideoView(id) {
@@ -991,8 +991,8 @@ function initVideoView(id) {
   }
 
   const rawId = id != null ? decodeURIComponent(id) : '';
-  if (typeof biliTubeLoadVideoById === 'function' && rawId) {
-    biliTubeLoadVideoById(rawId);
+  if (typeof BiliTubeLoadVideoById === 'function' && rawId) {
+    BiliTubeLoadVideoById(rawId);
   }
 }
 
@@ -1007,10 +1007,10 @@ function bindVideoView(view) {
     });
   }
 
-  const tabs = view.querySelectorAll('.btube-tab');
-  const details = view.querySelector('#btube-details-content');
-  const comments = view.querySelector('#btube-comments-content');
-  const panelBody = view.querySelector('.btube-panel-body');
+  const tabs = view.querySelectorAll('.BiliTube-tab');
+  const details = view.querySelector('#BiliTube-details-content');
+  const comments = view.querySelector('#BiliTube-comments-content');
+  const panelBody = view.querySelector('.BiliTube-panel-body');
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -1049,21 +1049,21 @@ function bindVideoView(view) {
   }
 
   view.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btube-reply-btn');
+    const btn = e.target.closest('.BiliTube-reply-btn');
     if (!btn || !view.contains(btn)) return;
-    const item = btn.closest('.btube-comment-item');
+    const item = btn.closest('.BiliTube-comment-item');
     if (!item) return;
-    const box = item.querySelector('.btube-reply-box');
+    const box = item.querySelector('.BiliTube-reply-box');
     if (!box) return;
     box.classList.toggle('active');
   });
 
-  const video = view.querySelector('#btube-video');
-  const qualityToggle = view.querySelector('#btube-quality-toggle');
-  const danmakuToggle = view.querySelector('#btube-danmaku-toggle');
-  const errorBanner = view.querySelector('#btube-video-error');
-  const panelToggle = view.querySelector('.btube-panel-toggle');
-  const rightPanel = view.querySelector('.btube-right-panel');
+  const video = view.querySelector('#BiliTube-video');
+  const qualityToggle = view.querySelector('#BiliTube-quality-toggle');
+  const danmakuToggle = view.querySelector('#BiliTube-danmaku-toggle');
+  const errorBanner = view.querySelector('#BiliTube-video-error');
+  const panelToggle = view.querySelector('.BiliTube-panel-toggle');
+  const rightPanel = view.querySelector('.BiliTube-right-panel');
 
   if (video) {
     video.addEventListener('error', () => {
@@ -1105,7 +1105,7 @@ function bindVideoView(view) {
         }
       }
 
-      const label = qualityToggle.querySelector('.btube-control-label');
+      const label = qualityToggle.querySelector('.BiliTube-control-label');
       if (label) {
         label.textContent = nextQuality === 'hd' ? '高清' : '标清';
       }
@@ -1123,7 +1123,7 @@ function bindVideoView(view) {
 
   if (panelToggle && rightPanel) {
     panelToggle.addEventListener('click', () => {
-      rightPanel.classList.toggle('btube-right-panel-collapsed');
+      rightPanel.classList.toggle('BiliTube-right-panel-collapsed');
     });
   }
 }
@@ -1201,8 +1201,8 @@ function initSearchView(type, keyword) {
       });
     }
 
-    if (!window.__biliTubeSearchScrollBound) {
-      window.__biliTubeSearchScrollBound = true;
+    if (!window.__BiliTubeSearchScrollBound) {
+      window.__BiliTubeSearchScrollBound = true;
       window.addEventListener('scroll', () => {
         const searchView = document.getElementById('view-search');
         if (!searchView || searchView.hidden) return;

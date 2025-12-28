@@ -56,15 +56,15 @@ python backend.py
 
 1. `DEFAULT_CONFIG`
 2. 配置文件 `config.json`
-   - 文件路径来自环境变量 `BTUBE_CONFIG`，默认值为 `config.json`
+   - 文件路径来自环境变量 `BiliTube_CONFIG`，默认值为 `config.json`
    - 若存在，则尝试读取其中与默认配置同名的字段
 3. 环境变量
-   - `BTUBE_HOST` → `host`
-   - `BTUBE_PORT` → `port`
-   - `BTUBE_SCHEME` → `scheme`
-   - `BTUBE_LOG_LEVEL` → `log_level`
-   - `BTUBE_USER_AGENT` → `user_agent`
-   - `BTUBE_URL_REGEX` → `url_regex`
+   - `BiliTube_HOST` → `host`
+   - `BiliTube_PORT` → `port`
+   - `BiliTube_SCHEME` → `scheme`
+   - `BiliTube_LOG_LEVEL` → `log_level`
+   - `BiliTube_USER_AGENT` → `user_agent`
+   - `BiliTube_URL_REGEX` → `url_regex`
 
 此外，在调用 `load_config()` 之前，`load_dotenv()` 会从 `.env` 文件中读入键值对到进程环境（仅当环境中原本不存在该键时进行覆盖）。
 
@@ -75,7 +75,7 @@ python backend.py
 在 `handle_proxy()` 与 `handle_stream()` 中，会依次从下列环境变量中读取 Cookie（`backend.py:230`、`backend.py:298`）：
 
 - `BiliTube_Cookie`
-- `BTUBE_COOKIE`
+- `BiliTube_COOKIE`
 - `BILIBILI_COOKIE`
 - `BiliTube_COOKIE`
 

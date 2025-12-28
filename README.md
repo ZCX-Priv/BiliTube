@@ -147,12 +147,12 @@ BiliTube 是一个以 B 站为数据源的 Web 端播放页与首页 Demo，前�
 
 4. 如需修改监听地址、端口、UA 等，可以编辑 `config.json` 或设置对应环境变量：
 
-   - `BTUBE_HOST`
-   - `BTUBE_PORT`
-   - `BTUBE_SCHEME`
-   - `BTUBE_LOG_LEVEL`
-   - `BTUBE_USER_AGENT`
-   - `BTUBE_URL_REGEX`
+   - `BiliTube_HOST`
+   - `BiliTube_PORT`
+   - `BiliTube_SCHEME`
+   - `BiliTube_LOG_LEVEL`
+   - `BiliTube_USER_AGENT`
+   - `BiliTube_URL_REGEX`
 
 ### 配置 B 站登录 Cookie（可选）
 
@@ -160,7 +160,7 @@ BiliTube 是一个以 B 站为数据源的 Web 端播放页与首页 Demo，前�
 
 - 常用变量名：
   - `BiliTube_Cookie`
-  - `BTUBE_COOKIE`
+  - `BiliTube_COOKIE`
   - `BILIBILI_COOKIE`
   - `BiliTube_COOKIE`
 
@@ -202,7 +202,7 @@ BiliTube_Cookie=SESSDATA=xxxx; bili_jct=xxxx; DedeUserID=xxxx;
 
 - 监听 `hashchange` 事件
 - 根据哈希值切换对应的视图容器显示 / 隐藏
-- 初始化各视图的事件绑定与状态（例如 `initVideoView` 会触发 `biliTubeLoadVideoById`，并初始化评论滚动加载等）
+- 初始化各视图的事件绑定与状态（例如 `initVideoView` 会触发 `BiliTubeLoadVideoById`，并初始化评论滚动加载等）
 
 ## 评论区与回复展开逻辑
 
@@ -230,8 +230,8 @@ BiliTube_Cookie=SESSDATA=xxxx; bili_jct=xxxx; DedeUserID=xxxx;
 
 项目内部有一套统一的确认弹窗实现，位于：
 
-- `index.html` 中的 `#btube-modal` 结构
-- `js/script.js` 中的 `biliTubeInitModal` 与 `biliTubeConfirm` 函数
+- `index.html` 中的 `#BiliTube-modal` 结构
+- `js/script.js` 中的 `BiliTubeInitModal` 与 `BiliTubeConfirm` 函数
 
 行为特点：
 

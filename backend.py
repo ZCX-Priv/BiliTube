@@ -51,7 +51,7 @@ def load_dotenv(path=".env"):
 
 def load_config():
     cfg = dict(DEFAULT_CONFIG)
-    path = os.environ.get("BTUBE_CONFIG", "config.json")
+    path = os.environ.get("BiliTube_CONFIG", "config.json")
     if os.path.isfile(path):
         try:
             with open(path, "r", encoding="utf-8") as f:
@@ -61,12 +61,12 @@ def load_config():
                     cfg[key] = data[key]
         except Exception:
             pass
-    host = os.environ.get("BTUBE_HOST")
-    port = os.environ.get("BTUBE_PORT")
-    scheme = os.environ.get("BTUBE_SCHEME")
-    log_level = os.environ.get("BTUBE_LOG_LEVEL")
-    user_agent = os.environ.get("BTUBE_USER_AGENT")
-    url_regex = os.environ.get("BTUBE_URL_REGEX")
+    host = os.environ.get("BiliTube_HOST")
+    port = os.environ.get("BiliTube_PORT")
+    scheme = os.environ.get("BiliTube_SCHEME")
+    log_level = os.environ.get("BiliTube_LOG_LEVEL")
+    user_agent = os.environ.get("BiliTube_USER_AGENT")
+    url_regex = os.environ.get("BiliTube_URL_REGEX")
     if host:
         cfg["host"] = host
     if port:
@@ -222,13 +222,14 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             if lk in ("host", "connection", "origin", "referer", "cookie"):
                 continue
             outgoing_headers[key] = value
-        outgoing_headers["User-Agent"] = CONFIG["user_agent"]
+        if "User-Agent" not in outgoing_headers:
+            outgoing_headers["User-Agent"] = CONFIG["user_agent"]
         parsed_target = urllib.parse.urlsplit(target)
         hostname = parsed_target.hostname or ""
         if hostname.endswith("bilibili.com") or hostname.endswith("hdslb.com"):
             cookie = (
                 os.environ.get("BiliTube_Cookie")
-                or os.environ.get("BTUBE_COOKIE")
+                or os.environ.get("BiliTube_COOKIE")
                 or os.environ.get("BILIBILI_COOKIE")
                 or os.environ.get("BiliTube_COOKIE")
             )
@@ -289,13 +290,14 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if not target:
             self.send_error(400, "Missing or invalid target url")
             return
-        headers = {"User-Agent": CONFIG["user_agent"]}
+        ua = self.headers.get("User-Agent")
+        headers = {"User-Agent": ua or CONFIG["user_agent"]}
         parsed_target = urllib.parse.urlsplit(target)
         hostname = parsed_target.hostname or ""
         if hostname.endswith("bilibili.com") or hostname.endswith("hdslb.com"):
             cookie = (
                 os.environ.get("BiliTube_Cookie")
-                or os.environ.get("BTUBE_COOKIE")
+                or os.environ.get("BiliTube_COOKIE")
                 or os.environ.get("BILIBILI_COOKIE")
                 or os.environ.get("BiliTube_COOKIE")
             )

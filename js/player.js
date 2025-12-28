@@ -1,4 +1,4 @@
-var biliTubeDanmakuState = {
+var BiliTubeDanmakuState = {
   list: [],
   index: 0,
   timer: null,
@@ -8,7 +8,7 @@ var biliTubeDanmakuState = {
   laneNextAvailable: []
 };
 
-var biliTubeCommentState = {
+var BiliTubeCommentState = {
   aid: 0,
   next: 1,
   loading: false,
@@ -60,22 +60,22 @@ function playerAttachSource(videoEl, url) {
   if (!videoEl || !url) return;
   var isHls = /\.m3u8(\?|$)/i.test(url);
   if (isHls && window.Hls && typeof window.Hls.isSupported === 'function' && window.Hls.isSupported()) {
-    if (window.biliTubeHls) {
+    if (window.BiliTubeHls) {
       try {
-        window.biliTubeHls.destroy();
+        window.BiliTubeHls.destroy();
       } catch (e) {}
-      window.biliTubeHls = null;
+      window.BiliTubeHls = null;
     }
     var hls = new window.Hls();
-    window.biliTubeHls = hls;
+    window.BiliTubeHls = hls;
     hls.loadSource(url);
     hls.attachMedia(videoEl);
   } else {
-    if (window.biliTubeHls) {
+    if (window.BiliTubeHls) {
       try {
-        window.biliTubeHls.destroy();
+        window.BiliTubeHls.destroy();
       } catch (e) {}
-      window.biliTubeHls = null;
+      window.BiliTubeHls = null;
     }
     var source = videoEl.querySelector('source');
     if (!source) {
@@ -137,7 +137,7 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
       }
       var streamUrl = '/stream?u=' + encodeURIComponent(rawUrl);
       playerAttachSource(videoEl, streamUrl);
-      var banner = document.getElementById('btube-video-error');
+      var banner = document.getElementById('BiliTube-video-error');
       if (banner) {
         banner.textContent = '';
         banner.style.display = 'none';
@@ -145,7 +145,7 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
       return streamUrl;
     })
     .catch(function (err) {
-      var banner = document.getElementById('btube-video-error');
+      var banner = document.getElementById('BiliTube-video-error');
       if (banner) {
         var msg = '视频播放地址加载失败，请稍后重试。';
         if (err && err.message === 'playurl_api') {
@@ -158,14 +158,14 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
     });
 }
 
-function biliTubeResetCommentState(aid) {
-  biliTubeCommentState.aid = aid;
-  biliTubeCommentState.next = 1;
-  biliTubeCommentState.loading = false;
-  biliTubeCommentState.finished = false;
+function BiliTubeResetCommentState(aid) {
+  BiliTubeCommentState.aid = aid;
+  BiliTubeCommentState.next = 1;
+  BiliTubeCommentState.loading = false;
+  BiliTubeCommentState.finished = false;
 }
 
-function biliTubeLoadVideoById(id) {
+function BiliTubeLoadVideoById(id) {
   var raw = (id || '').trim();
   if (!raw) return;
   var isBvid = /^BV/i.test(raw);
@@ -175,7 +175,7 @@ function biliTubeLoadVideoById(id) {
     key +
     '=' +
     encodeURIComponent(raw);
-  var errorBanner = document.getElementById('btube-video-error');
+  var errorBanner = document.getElementById('BiliTube-video-error');
   if (errorBanner) {
     errorBanner.textContent = '';
     errorBanner.style.display = 'none';
@@ -195,23 +195,23 @@ function biliTubeLoadVideoById(id) {
       var authorName = owner.name || '';
       var avatar = owner.face || '';
       var bio = data.dynamic || '';
-      var titleEl = document.getElementById('btube-video-title');
+      var titleEl = document.getElementById('BiliTube-video-title');
       if (titleEl) {
         titleEl.textContent = title;
       }
-      var descEl = document.getElementById('btube-video-desc');
+      var descEl = document.getElementById('BiliTube-video-desc');
       if (descEl) {
         descEl.textContent = desc;
       }
-      var nameEl = document.getElementById('btube-author-name');
+      var nameEl = document.getElementById('BiliTube-author-name');
       if (nameEl) {
         nameEl.textContent = authorName || '';
       }
-      var bioEl = document.getElementById('btube-author-bio');
+      var bioEl = document.getElementById('BiliTube-author-bio');
       if (bioEl) {
         bioEl.textContent = bio || '';
       }
-      var avatarEl = document.getElementById('btube-author-avatar');
+      var avatarEl = document.getElementById('BiliTube-author-avatar');
       if (avatarEl) {
         var displayAvatar = avatar;
         if (displayAvatar && typeof homeParseCoverUrl === 'function') {
@@ -226,7 +226,7 @@ function biliTubeLoadVideoById(id) {
           avatarEl.textContent = initial;
         }
       }
-      var videoEl = document.getElementById('btube-video');
+      var videoEl = document.getElementById('BiliTube-video');
       if (videoEl) {
         var displayPoster = poster;
         if (displayPoster && typeof homeParseCoverUrl === 'function') {
@@ -247,10 +247,10 @@ function biliTubeLoadVideoById(id) {
       var stat = data.stat || {};
       var viewsNum = stat.view || stat.play || 0;
       var durationSeconds = data.duration || 0;
-      if (typeof biliTubeRecordWatchHistory === 'function') {
+      if (typeof BiliTubeRecordWatchHistory === 'function') {
         var historyId = bvid || (aid ? String(aid) : '');
         if (historyId) {
-          biliTubeRecordWatchHistory({
+          BiliTubeRecordWatchHistory({
             id: historyId,
             title: title,
             cover: poster,
@@ -268,7 +268,7 @@ function biliTubeLoadVideoById(id) {
       return playerLoadPlayUrl(videoEl, bvid, aid, cid);
     })
     .catch(function (err) {
-      var banner = document.getElementById('btube-video-error');
+      var banner = document.getElementById('BiliTube-video-error');
       if (banner) {
         var msg = '视频信息加载失败，请稍后重试。';
         if (err && err.message === 'view_api') {
@@ -281,7 +281,7 @@ function biliTubeLoadVideoById(id) {
 }
 
 function playerRenderEpisodes(pages, currentCid, bvid, aid, videoEl) {
-  var container = document.getElementById('btube-episodes');
+  var container = document.getElementById('BiliTube-episodes');
   if (!container) return;
   container.innerHTML = '';
   if (!pages || !pages.length || pages.length === 1) {
@@ -290,30 +290,30 @@ function playerRenderEpisodes(pages, currentCid, bvid, aid, videoEl) {
   }
   container.style.display = 'block';
   var title = document.createElement('div');
-  title.className = 'btube-section-title';
+  title.className = 'BiliTube-section-title';
   title.textContent = '选集';
   var list = document.createElement('div');
-  list.className = 'btube-episode-list';
+  list.className = 'BiliTube-episode-list';
   pages.forEach(function (item, index) {
     var cid = item.cid;
     var label = item.part || '';
     var pageNum = item.page || index + 1;
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'btube-episode-chip';
+    btn.className = 'BiliTube-episode-chip';
     if (String(cid) === String(currentCid)) {
-      btn.className += ' btube-episode-chip-active';
+      btn.className += ' BiliTube-episode-chip-active';
     }
     btn.textContent = 'P' + pageNum + ' ' + label;
     btn.setAttribute('data-cid', String(cid));
     btn.setAttribute('data-page', String(pageNum));
     btn.addEventListener('click', function () {
       var targetCid = Number(btn.getAttribute('data-cid'));
-      var siblings = list.querySelectorAll('.btube-episode-chip');
+      var siblings = list.querySelectorAll('.BiliTube-episode-chip');
       siblings.forEach(function (el) {
-        el.classList.remove('btube-episode-chip-active');
+        el.classList.remove('BiliTube-episode-chip-active');
       });
-      btn.classList.add('btube-episode-chip-active');
+      btn.classList.add('BiliTube-episode-chip-active');
       playerLoadPlayUrl(videoEl, bvid, aid, targetCid).catch(function () {});
       playerLoadDanmaku(targetCid);
     });
@@ -324,56 +324,56 @@ function playerRenderEpisodes(pages, currentCid, bvid, aid, videoEl) {
 }
 
 function playerSetDanmakuEnabled(enabled) {
-  biliTubeDanmakuState.enabled = !!enabled;
-  var layer = document.getElementById('btube-danmaku-layer');
+  BiliTubeDanmakuState.enabled = !!enabled;
+  var layer = document.getElementById('BiliTube-danmaku-layer');
   if (!layer) return;
   layer.style.display = enabled ? 'block' : 'none';
 }
 
 function playerEnsureDanmakuLoop() {
-  if (biliTubeDanmakuState.timer) {
+  if (BiliTubeDanmakuState.timer) {
     return;
   }
-  var videoEl = document.getElementById('btube-video');
-  var layer = document.getElementById('btube-danmaku-layer');
+  var videoEl = document.getElementById('BiliTube-video');
+  var layer = document.getElementById('BiliTube-danmaku-layer');
   if (!videoEl || !layer) {
     return;
   }
-  biliTubeDanmakuState.timer = setInterval(function () {
-    if (!biliTubeDanmakuState.enabled) return;
-    if (!biliTubeDanmakuState.list || !biliTubeDanmakuState.list.length) return;
-    if (biliTubeDanmakuState.index >= biliTubeDanmakuState.list.length) return;
+  BiliTubeDanmakuState.timer = setInterval(function () {
+    if (!BiliTubeDanmakuState.enabled) return;
+    if (!BiliTubeDanmakuState.list || !BiliTubeDanmakuState.list.length) return;
+    if (BiliTubeDanmakuState.index >= BiliTubeDanmakuState.list.length) return;
     if (!videoEl.duration || isNaN(videoEl.currentTime)) return;
     var currentTime = videoEl.currentTime;
     var height = layer.clientHeight || videoEl.clientHeight || 0;
-    var lineHeight = biliTubeDanmakuState.lineHeight;
+    var lineHeight = BiliTubeDanmakuState.lineHeight;
     var rows = height > 0 ? Math.max(6, Math.floor((height - 40) / lineHeight)) : 6;
-    if (!biliTubeDanmakuState.laneNextAvailable || biliTubeDanmakuState.laneNextAvailable.length !== rows) {
-      biliTubeDanmakuState.laneNextAvailable = [];
+    if (!BiliTubeDanmakuState.laneNextAvailable || BiliTubeDanmakuState.laneNextAvailable.length !== rows) {
+      BiliTubeDanmakuState.laneNextAvailable = [];
       for (var r = 0; r < rows; r++) {
-        biliTubeDanmakuState.laneNextAvailable[r] = 0;
+        BiliTubeDanmakuState.laneNextAvailable[r] = 0;
       }
     }
-    while (biliTubeDanmakuState.index < biliTubeDanmakuState.list.length) {
-      var item = biliTubeDanmakuState.list[biliTubeDanmakuState.index];
+    while (BiliTubeDanmakuState.index < BiliTubeDanmakuState.list.length) {
+      var item = BiliTubeDanmakuState.list[BiliTubeDanmakuState.index];
       if (item.time > currentTime) {
         break;
       }
       var bestLane = 0;
-      var earliest = biliTubeDanmakuState.laneNextAvailable[0];
+      var earliest = BiliTubeDanmakuState.laneNextAvailable[0];
       for (var i = 1; i < rows; i++) {
-        if (biliTubeDanmakuState.laneNextAvailable[i] < earliest) {
-          earliest = biliTubeDanmakuState.laneNextAvailable[i];
+        if (BiliTubeDanmakuState.laneNextAvailable[i] < earliest) {
+          earliest = BiliTubeDanmakuState.laneNextAvailable[i];
           bestLane = i;
         }
       }
       if (earliest > currentTime) {
-        bestLane = biliTubeDanmakuState.laneIndex % rows;
+        bestLane = BiliTubeDanmakuState.laneIndex % rows;
       }
-      biliTubeDanmakuState.laneIndex = bestLane;
-      var top = Math.round(10 + lineHeight * biliTubeDanmakuState.laneIndex);
+      BiliTubeDanmakuState.laneIndex = bestLane;
+      var top = Math.round(10 + lineHeight * BiliTubeDanmakuState.laneIndex);
       var el = document.createElement('div');
-      el.className = 'btube-danmaku-item';
+      el.className = 'BiliTube-danmaku-item';
       el.textContent = item.text;
       el.style.top = top + 'px';
       layer.appendChild(el);
@@ -382,21 +382,21 @@ function playerEnsureDanmakuLoop() {
           layer.removeChild(el);
         }
       }, 8000);
-      biliTubeDanmakuState.laneNextAvailable[bestLane] = currentTime + 8;
-      biliTubeDanmakuState.index += 1;
+      BiliTubeDanmakuState.laneNextAvailable[bestLane] = currentTime + 8;
+      BiliTubeDanmakuState.index += 1;
     }
   }, 100);
 }
 
 function playerLoadDanmaku(cid) {
-  var layer = document.getElementById('btube-danmaku-layer');
+  var layer = document.getElementById('BiliTube-danmaku-layer');
   if (layer) {
     layer.innerHTML = '';
   }
-  biliTubeDanmakuState.list = [];
-  biliTubeDanmakuState.index = 0;
-  biliTubeDanmakuState.laneIndex = 0;
-  biliTubeDanmakuState.laneNextAvailable = [];
+  BiliTubeDanmakuState.list = [];
+  BiliTubeDanmakuState.index = 0;
+  BiliTubeDanmakuState.laneIndex = 0;
+  BiliTubeDanmakuState.laneNextAvailable = [];
   if (!cid) {
     return;
   }
@@ -428,8 +428,8 @@ function playerLoadDanmaku(cid) {
       list.sort(function (a, b) {
         return a.time - b.time;
       });
-      biliTubeDanmakuState.list = list;
-      biliTubeDanmakuState.index = 0;
+      BiliTubeDanmakuState.list = list;
+      BiliTubeDanmakuState.index = 0;
       playerEnsureDanmakuLoop();
     })
     .catch(function () {});
@@ -440,9 +440,9 @@ function playerAppendSubReply(box, sub) {
     return;
   }
   var subItem = document.createElement('div');
-  subItem.className = 'btube-comment-item btube-comment-reply';
+  subItem.className = 'BiliTube-comment-item BiliTube-comment-reply';
   var subAvatar = document.createElement('div');
-  subAvatar.className = 'btube-avatar btube-avatar-xsmall';
+  subAvatar.className = 'BiliTube-avatar BiliTube-avatar-xsmall';
   var subName = (sub.member && sub.member.uname) || '';
   var subFace =
     (sub.member && (sub.member.avatar || sub.member.face)) || '';
@@ -456,12 +456,12 @@ function playerAppendSubReply(box, sub) {
     subAvatar.textContent = subName ? subName.charAt(0) : 'U';
   }
   var subContent = document.createElement('div');
-  subContent.className = 'btube-comment-content';
+  subContent.className = 'BiliTube-comment-content';
   var subUser = document.createElement('div');
-  subUser.className = 'btube-comment-user';
+  subUser.className = 'BiliTube-comment-user';
   subUser.textContent = subName || '用户';
   var subText = document.createElement('div');
-  subText.className = 'btube-comment-text';
+  subText.className = 'BiliTube-comment-text';
   subText.textContent =
     (sub.content && sub.content.message) || '';
   subContent.appendChild(subUser);
@@ -472,31 +472,31 @@ function playerAppendSubReply(box, sub) {
 }
 
 function playerLoadComments(aid) {
-  var container = document.getElementById('btube-comments-content');
+  var container = document.getElementById('BiliTube-comments-content');
   if (!container || !aid) {
     return;
   }
-  if (biliTubeCommentState.aid !== aid) {
-    biliTubeResetCommentState(aid);
+  if (BiliTubeCommentState.aid !== aid) {
+    BiliTubeResetCommentState(aid);
   } else {
-    biliTubeCommentState.next = 1;
-    biliTubeCommentState.finished = false;
+    BiliTubeCommentState.next = 1;
+    BiliTubeCommentState.finished = false;
   }
   container.innerHTML = '';
   playerLoadMoreComments(true);
 }
 
 function playerLoadMoreComments(isFirstPage) {
-  var container = document.getElementById('btube-comments-content');
+  var container = document.getElementById('BiliTube-comments-content');
   if (!container) {
     return;
   }
-  var aid = biliTubeCommentState.aid;
-  if (!aid || biliTubeCommentState.loading || biliTubeCommentState.finished) {
+  var aid = BiliTubeCommentState.aid;
+  if (!aid || BiliTubeCommentState.loading || BiliTubeCommentState.finished) {
     return;
   }
-  biliTubeCommentState.loading = true;
-  var page = biliTubeCommentState.next || 1;
+  BiliTubeCommentState.loading = true;
+  var page = BiliTubeCommentState.next || 1;
   var apiMain =
     'https://api.bilibili.com/x/v2/reply/main?oid=' +
     encodeURIComponent(String(aid)) +
@@ -515,19 +515,19 @@ function playerLoadMoreComments(isFirstPage) {
     if (!replies.length) {
       if (isFirstPage && !container.children.length) {
         var empty = document.createElement('div');
-        empty.className = 'btube-comment-text';
+        empty.className = 'BiliTube-comment-text';
         empty.textContent = '暂无评论';
         container.appendChild(empty);
       }
-      biliTubeCommentState.finished = true;
-      biliTubeCommentState.loading = false;
+      BiliTubeCommentState.finished = true;
+      BiliTubeCommentState.loading = false;
       return;
     }
     replies.forEach(function (reply) {
       var item = document.createElement('div');
-      item.className = 'btube-comment-item';
+      item.className = 'BiliTube-comment-item';
       var avatar = document.createElement('div');
-      avatar.className = 'btube-avatar btube-avatar-small';
+      avatar.className = 'BiliTube-avatar BiliTube-avatar-small';
       var uname = (reply.member && reply.member.uname) || '';
       var face =
         (reply.member && (reply.member.avatar || reply.member.face)) || '';
@@ -541,16 +541,16 @@ function playerLoadMoreComments(isFirstPage) {
         avatar.textContent = uname ? uname.charAt(0) : 'U';
       }
       var content = document.createElement('div');
-      content.className = 'btube-comment-content';
+      content.className = 'BiliTube-comment-content';
       var userEl = document.createElement('div');
-      userEl.className = 'btube-comment-user';
+      userEl.className = 'BiliTube-comment-user';
       userEl.textContent = uname || '用户';
       var textEl = document.createElement('div');
-      textEl.className = 'btube-comment-text';
+      textEl.className = 'BiliTube-comment-text';
       textEl.textContent =
         (reply.content && reply.content.message) || '';
       var meta = document.createElement('div');
-      meta.className = 'btube-rec-meta';
+      meta.className = 'BiliTube-rec-meta';
       var likes = reply.like || 0;
       var ts = reply.ctime ? new Date(reply.ctime * 1000) : null;
       var timeText = ts ? ts.toLocaleDateString() : '';
@@ -566,7 +566,7 @@ function playerLoadMoreComments(isFirstPage) {
       var hasReplies =
         (reply.replies && reply.replies.length) || reply.rcount;
       var box = document.createElement('div');
-      box.className = 'btube-reply-box';
+      box.className = 'BiliTube-reply-box';
       if (reply.replies && reply.replies.length) {
         reply.replies.slice(0, 2).forEach(function (sub) {
           playerAppendSubReply(box, sub);
@@ -574,10 +574,10 @@ function playerLoadMoreComments(isFirstPage) {
       }
       if (reply.rcount && reply.rcount > (reply.replies ? reply.replies.length : 0)) {
         var more = document.createElement('div');
-        more.className = 'btube-reply-more';
+        more.className = 'BiliTube-reply-more';
         more.textContent = '查看全部 ' + reply.rcount + ' 条回复';
         more.setAttribute('data-expanded', 'false');
-        more._biliTubeLabel = more.textContent;
+        more._BiliTubeLabel = more.textContent;
         more.addEventListener('click', function () {
           playerShowMoreReplies(aid, reply.rpid, box, more);
         });
@@ -594,28 +594,28 @@ function playerLoadMoreComments(isFirstPage) {
     if (usingMain && res.data && res.data.cursor) {
       var cursor = res.data.cursor || {};
       if (typeof cursor.next === 'number' && cursor.next > 0) {
-        biliTubeCommentState.next = cursor.next;
+        BiliTubeCommentState.next = cursor.next;
       } else {
-        biliTubeCommentState.finished = true;
+        BiliTubeCommentState.finished = true;
       }
       if (cursor.is_end) {
-        biliTubeCommentState.finished = true;
+        BiliTubeCommentState.finished = true;
       }
     } else {
-      var nextPage = biliTubeCommentState.next || 1;
-      biliTubeCommentState.next = nextPage + 1;
+      var nextPage = BiliTubeCommentState.next || 1;
+      BiliTubeCommentState.next = nextPage + 1;
       if (replies.length < 50) {
-        biliTubeCommentState.finished = true;
+        BiliTubeCommentState.finished = true;
       }
     }
-    biliTubeCommentState.loading = false;
+    BiliTubeCommentState.loading = false;
   };
   var handleError = function () {
-    biliTubeCommentState.loading = false;
-    biliTubeCommentState.finished = true;
+    BiliTubeCommentState.loading = false;
+    BiliTubeCommentState.finished = true;
     if (isFirstPage && !container.children.length) {
       var error = document.createElement('div');
-      error.className = 'btube-comment-text';
+      error.className = 'BiliTube-comment-text';
       error.textContent = '评论加载失败，请稍后重试。';
       container.appendChild(error);
     }
@@ -639,13 +639,13 @@ function playerLoadMoreComments(isFirstPage) {
 }
 
 function playerLoadRecommendations(bvid, aid) {
-  var container = document.getElementById('btube-recommendations');
+  var container = document.getElementById('BiliTube-recommendations');
   if (!container || (!bvid && !aid)) {
     return;
   }
   container.innerHTML = '';
   var title = document.createElement('div');
-  title.className = 'btube-section-title';
+  title.className = 'BiliTube-section-title';
   title.textContent = '相关推荐';
   container.appendChild(title);
   var apiBase = 'https://api.bilibili.com/x/web-interface/archive/related?';
@@ -661,9 +661,9 @@ function playerLoadRecommendations(bvid, aid) {
       var list = res.data || [];
       list.slice(0, 10).forEach(function (item) {
         var rec = document.createElement('div');
-        rec.className = 'btube-rec-item';
+        rec.className = 'BiliTube-rec-item';
         var thumb = document.createElement('div');
-        thumb.className = 'btube-rec-thumb';
+        thumb.className = 'BiliTube-rec-thumb';
         var pic = item.pic || item.cover || '';
         if (pic) {
           var coverUrl = pic;
@@ -675,12 +675,12 @@ function playerLoadRecommendations(bvid, aid) {
           thumb.style.backgroundPosition = 'center';
         }
         var info = document.createElement('div');
-        info.className = 'btube-rec-info';
+        info.className = 'BiliTube-rec-info';
         var titleEl = document.createElement('div');
-        titleEl.className = 'btube-rec-title';
+        titleEl.className = 'BiliTube-rec-title';
         titleEl.textContent = item.title || '';
         var meta = document.createElement('div');
-        meta.className = 'btube-rec-meta';
+        meta.className = 'BiliTube-rec-meta';
         var stat = item.stat || {};
         var views = stat.view || stat.play || 0;
         var viewText = views
@@ -710,14 +710,14 @@ function playerShowMoreReplies(aid, rpid, box, controlEl) {
     return;
   }
   if (controlEl && controlEl.getAttribute('data-expanded') === 'true') {
-    var prevReplies = controlEl._biliTubeAllReplies || [];
+    var prevReplies = controlEl._BiliTubeAllReplies || [];
     box.innerHTML = '';
     if (prevReplies && prevReplies.length) {
       prevReplies.slice(0, 2).forEach(function (sub) {
         playerAppendSubReply(box, sub);
       });
     }
-    var label = controlEl._biliTubeLabel || controlEl.textContent || '';
+    var label = controlEl._BiliTubeLabel || controlEl.textContent || '';
     if (label) {
       controlEl.textContent = label;
     }
@@ -740,7 +740,7 @@ function playerShowMoreReplies(aid, rpid, box, controlEl) {
         playerAppendSubReply(box, sub);
       });
       if (controlEl) {
-        controlEl._biliTubeAllReplies = replies;
+        controlEl._BiliTubeAllReplies = replies;
         controlEl.textContent = '收起评论';
         controlEl.setAttribute('data-expanded', 'true');
       }

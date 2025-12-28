@@ -2,8 +2,23 @@ const HOME_STATE = {
   currentTab: 'rcmd',
   page: 1,
   loading: false,
-  finished: false
+  finished: false,
+  cachedTab: '',
+  cachedHtml: '',
+  scrollPosition: 0
 };
+
+function homeSaveScrollPosition() {
+  HOME_STATE.scrollPosition = window.scrollY || document.documentElement.scrollTop || 0;
+}
+
+function homeRestoreScrollPosition() {
+  if (HOME_STATE.scrollPosition > 0) {
+    setTimeout(function() {
+      window.scrollTo(0, HOME_STATE.scrollPosition);
+    }, 100);
+  }
+}
 
 function homeFormatDuration(totalSeconds) {
   const s = parseInt(totalSeconds, 10) || 0;
@@ -148,6 +163,14 @@ function loadHomeVideos(tab, page, replace) {
   HOME_STATE.loading = true;
   HOME_STATE.page = page;
   const container = grid.parentElement || grid;
+
+  if (page === 1 && HOME_STATE.cachedTab === tab && HOME_STATE.cachedHtml) {
+    grid.innerHTML = HOME_STATE.cachedHtml;
+    HOME_STATE.loading = false;
+    homeRestoreScrollPosition();
+    return;
+  }
+
   let url;
   if (tab === 'popular') {
     url =
@@ -212,9 +235,12 @@ function loadHomeVideos(tab, page, replace) {
 
         if (replace) {
           grid.innerHTML = htmlArray.join('');
+          HOME_STATE.cachedTab = tab;
+          HOME_STATE.cachedHtml = grid.innerHTML;
         } else {
           insertVideosOptimized(grid, htmlArray);
         }
+        homeRestoreScrollPosition();
       })
       .catch(() => {
         if (replace) {

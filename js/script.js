@@ -756,11 +756,19 @@ function handleRouteChange() {
   }
 
   const views = document.querySelectorAll('.view');
+  let wasOnHome = false;
   views.forEach(view => {
     const active = view.id === viewId;
+    if (view.id === 'view-home' && !view.hidden) {
+      wasOnHome = true;
+    }
     view.hidden = !active;
     view.classList.toggle('active', active);
   });
+
+  if (wasOnHome && viewId !== 'view-home' && typeof homeSaveScrollPosition === 'function') {
+    homeSaveScrollPosition();
+  }
 
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
@@ -820,26 +828,29 @@ function BiliTubeLoadProfileHeader(view) {
         if (avatar) {
           avatarEl.style.backgroundImage = "url('" + avatar + "')";
         } else {
-          avatarEl.style.backgroundImage = '';
+          avatarEl.style.backgroundImage = "url('img/BiliTube.png')";
         }
       }
       if (nameEl) {
-        nameEl.textContent = uname || '未登录用户';
+        nameEl.textContent = uname || 'BiliTube';
       }
       if (bioEl) {
-        if (sign) {
+        if (sign && sign.trim()) {
           bioEl.textContent = sign;
         } else {
-          bioEl.textContent = '无法获取账号信息，请确认已登录并配置 Cookie';
+          bioEl.textContent = '这个人很懒，什么都没有留下';
         }
       }
     })
     .catch(() => {
+      if (avatarEl) {
+        avatarEl.style.backgroundImage = "url('img/BiliTube.png')";
+      }
       if (nameEl) {
-        nameEl.textContent = '未登录用户';
+        nameEl.textContent = 'BiliTube';
       }
       if (bioEl) {
-        bioEl.textContent = '无法获取账号信息，请确认已登录并配置 Cookie';
+        bioEl.textContent = '这个人很懒，什么都没有留下';
       }
     });
 }
@@ -1150,12 +1161,26 @@ function bindVideoView(view) {
   const rightPanel = view.querySelector('.BiliTube-right-panel');
 
   if (video) {
-    video.addEventListener('error', () => {
-      if (errorBanner) {
-        errorBanner.textContent = isMobileDevice()
-          ? '移动端视频加载失败，请检查网络或浏览器设置。'
-          : '视频加载失败，请稍后重试。';
-        errorBanner.style.display = 'block';
+    video.addEventListener('error', function(e) {
+      var error = video.error;
+      if (!error) return;
+      var code = error.code;
+      if (code === 2 || code === 3 || code === 4) {
+        if (typeof playerHandleStall === 'function') {
+          playerHandleStall(video);
+        } else {
+          if (errorBanner) {
+            errorBanner.textContent = isMobileDevice()
+              ? '移动端视频加载失败，请检查网络或浏览器设置。'
+              : '视频加载失败，请稍后重试。';
+            errorBanner.style.display = 'block';
+          }
+        }
+      }
+    });
+    video.addEventListener('canplay', function() {
+      if (typeof BiliTubeVideoChecker !== 'undefined' && BiliTubeVideoChecker.stopStallTimer) {
+        BiliTubeVideoChecker.stopStallTimer();
       }
     });
   }

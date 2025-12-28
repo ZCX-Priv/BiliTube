@@ -2,14 +2,19 @@ var SEARCH_VIDEO_STATE = {
   keyword: '',
   page: 1,
   finished: false,
-  loading: false
+  loading: false,
+  cachedKeyword: '',
+  cachedHtml: '',
+  cachedUsersHtml: ''
 };
 
 var SEARCH_USER_STATE = {
   keyword: '',
   page: 1,
   finished: false,
-  loading: false
+  loading: false,
+  cachedKeyword: '',
+  cachedHtml: ''
 };
 
 function searchProxyUrl(u) {
@@ -75,6 +80,8 @@ function fillSearchVideoResults(keyword) {
     SEARCH_VIDEO_STATE.page = 1;
     SEARCH_VIDEO_STATE.finished = true;
     SEARCH_VIDEO_STATE.loading = false;
+    SEARCH_VIDEO_STATE.cachedKeyword = '';
+    SEARCH_VIDEO_STATE.cachedHtml = '';
     grid.innerHTML =
       '<div class="empty-result">' + t('search_empty_videos') + '</div>';
     var moreBtnEmpty = document.getElementById('search-video-more');
@@ -84,10 +91,22 @@ function fillSearchVideoResults(keyword) {
     }
     return;
   }
+  if (SEARCH_VIDEO_STATE.cachedKeyword === value && SEARCH_VIDEO_STATE.cachedHtml) {
+    grid.innerHTML = SEARCH_VIDEO_STATE.cachedHtml;
+    SEARCH_VIDEO_STATE.keyword = value;
+    SEARCH_VIDEO_STATE.page = SEARCH_VIDEO_STATE.finished ? SEARCH_VIDEO_STATE.page : SEARCH_VIDEO_STATE.page;
+    var moreBtn = document.getElementById('search-video-more');
+    if (moreBtn) {
+      moreBtn.style.display = SEARCH_VIDEO_STATE.finished ? 'none' : 'block';
+      moreBtn.disabled = SEARCH_VIDEO_STATE.finished;
+    }
+    return;
+  }
   SEARCH_VIDEO_STATE.keyword = value;
   SEARCH_VIDEO_STATE.page = 1;
   SEARCH_VIDEO_STATE.finished = false;
   SEARCH_VIDEO_STATE.loading = false;
+  SEARCH_VIDEO_STATE.cachedKeyword = value;
   var container = grid.parentElement || grid;
   var run = function () {
     grid.innerHTML = '';
@@ -196,6 +215,7 @@ function searchLoadMoreVideos() {
         })
         .join('');
       grid.insertAdjacentHTML('beforeend', html);
+      SEARCH_VIDEO_STATE.cachedHtml = grid.innerHTML;
       var numPages = data.numPages || data.num_pages || 0;
       if (numPages && page >= numPages) {
         SEARCH_VIDEO_STATE.finished = true;
@@ -247,6 +267,8 @@ function fillSearchUserResults(keyword) {
     SEARCH_USER_STATE.page = 1;
     SEARCH_USER_STATE.finished = true;
     SEARCH_USER_STATE.loading = false;
+    SEARCH_USER_STATE.cachedKeyword = '';
+    SEARCH_USER_STATE.cachedHtml = '';
     container.innerHTML =
       '<div class="empty-result">' + t('search_empty_users') + '</div>';
     var moreBtnEmpty = document.getElementById('search-user-more');
@@ -256,10 +278,21 @@ function fillSearchUserResults(keyword) {
     }
     return;
   }
+  if (SEARCH_USER_STATE.cachedKeyword === value && SEARCH_USER_STATE.cachedHtml) {
+    container.innerHTML = SEARCH_USER_STATE.cachedHtml;
+    SEARCH_USER_STATE.keyword = value;
+    var moreBtn = document.getElementById('search-user-more');
+    if (moreBtn) {
+      moreBtn.style.display = SEARCH_USER_STATE.finished ? 'none' : 'block';
+      moreBtn.disabled = SEARCH_USER_STATE.finished;
+    }
+    return;
+  }
   SEARCH_USER_STATE.keyword = value;
   SEARCH_USER_STATE.page = 1;
   SEARCH_USER_STATE.finished = false;
   SEARCH_USER_STATE.loading = false;
+  SEARCH_USER_STATE.cachedKeyword = value;
   var run = function () {
     container.innerHTML = '';
     var moreBtnFirst = document.getElementById('search-user-more');
@@ -351,6 +384,7 @@ function searchLoadMoreUsers() {
         })
         .join('');
       container.insertAdjacentHTML('beforeend', html);
+      SEARCH_USER_STATE.cachedHtml = container.innerHTML;
       var numPages = data.numPages || data.num_pages || 0;
       if (numPages && page >= numPages) {
         SEARCH_USER_STATE.finished = true;

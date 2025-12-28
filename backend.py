@@ -497,7 +497,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                             self.wfile.write(chunk)
                             total_sent += len(chunk)
                         except Exception as e:
-                            logging.warning("Chunk read error: %s", e)
+                            if "10053" in str(e) or "10054" in str(e):
+                                pass
+                            else:
+                                logging.warning("Chunk read error: %s", e)
                             break
                     return
             except Exception as e:
@@ -522,10 +525,7 @@ def print_banner():
     port = CONFIG["port"]
     scheme = CONFIG["scheme"]
     addr = f"{scheme}://{host}:{port}/"
-    blue = "\033[94m"
-    red = "\033[91m"
-    reset = "\033[0m"
-    text = f"{blue}Bili{red}Tube{reset}"
+    text = "BiliTube"
     cache_info = f"缓存: {CACHE_MAX_SIZE} 条, TTL: {CACHE_TTL}s"
     lines = [
         "",

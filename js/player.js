@@ -8,6 +8,113 @@ var BiliTubeDanmakuState = {
   laneNextAvailable: []
 };
 
+var BiliTubeVideoChecker = {
+  retryCount: 0,
+  maxRetries: 3,
+  retryDelay: [1000, 2000, 4000],
+  currentRetry: 0,
+  timer: null,
+  stallTimer: null,
+  stallThreshold: 8000,
+  isRetrying: false,
+  lastBvid: '',
+  lastCid: '',
+  lastAid: '',
+  pendingRetry: null,
+
+  reset: function() {
+    this.retryCount = 0;
+    this.currentRetry = 0;
+    this.isRetrying = false;
+    this.lastBvid = '';
+    this.lastCid = '';
+    this.lastAid = '';
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    if (this.stallTimer) {
+      clearTimeout(this.stallTimer);
+      this.stallTimer = null;
+    }
+    this.pendingRetry = null;
+  },
+
+  markRetry: function(bvid, aid, cid) {
+    this.lastBvid = bvid || '';
+    this.lastAid = aid || '';
+    this.lastCid = cid || '';
+    if (this.currentRetry >= this.maxRetries) {
+      this.retryCount++;
+      this.currentRetry = 0;
+    }
+  },
+
+  canRetry: function() {
+    return this.currentRetry < this.maxRetries;
+  },
+
+  getNextDelay: function() {
+    var delay = this.retryDelay[this.currentRetry] || 2000;
+    this.currentRetry++;
+    return delay;
+  },
+
+  startStallTimer: function(videoEl, callback) {
+    this.stopStallTimer();
+    if (!videoEl) return;
+    var self = this;
+    this.stallTimer = setTimeout(function() {
+      if (videoEl && videoEl.readyState < 3) {
+        callback && callback();
+      }
+    }, this.stallThreshold);
+  },
+
+  stopStallTimer: function() {
+    if (this.stallTimer) {
+      clearTimeout(this.stallTimer);
+      this.stallTimer = null;
+    }
+  },
+
+  isCorruptionError: function(err) {
+    if (!err) return false;
+    if (err.name === 'MediaError') {
+      var code = err.code || 0;
+      return code === 1 || code === 2 || code === 3 || code === 4;
+    }
+    return false;
+  },
+
+  isNetworkError: function(err) {
+    if (!err) return false;
+    if (err.name === 'TypeError' && err.message && err.message.indexOf('Failed to fetch') !== -1) {
+      return true;
+    }
+    if (err.name === 'MediaError' && err.code === 1) {
+      return true;
+    }
+    return false;
+  },
+
+  clearVideoSource: function(videoEl) {
+    if (!videoEl) return;
+    videoEl.removeAttribute('src');
+    if (window.BiliTubeHls) {
+      try {
+        window.BiliTubeHls.destroy();
+      } catch (e) {}
+      window.BiliTubeHls = null;
+    }
+    var source = videoEl.querySelector('source');
+    if (source) {
+      source.remove();
+    }
+    videoEl.load();
+  }
+};
+
 var BiliTubeCommentState = {
   aid: 0,
   next: 1,
@@ -83,6 +190,7 @@ function playerAttachSource(videoEl, url) {
     hls.attachMedia(videoEl);
     hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
       videoEl.currentTime = 0;
+      BiliTubeVideoChecker.stopStallTimer();
     });
   } else {
     if (window.BiliTubeHls) {
@@ -110,6 +218,98 @@ function playerAttachSource(videoEl, url) {
     } catch (e) {}
   }
 }
+
+var BiliTubeVideoProgress = {
+  saveDelay: 5000,
+  lastSaveTime: 0,
+  saveTimer: null,
+  currentVideoId: '',
+
+  save: function(videoId, currentTime, duration) {
+    if (!videoId || typeof currentTime !== 'number' || currentTime <= 0) return;
+    if (duration && currentTime >= duration * 0.95) return;
+    var key = 'BiliTube-video-progress-' + videoId;
+    var progressData = {
+      currentTime: currentTime,
+      duration: duration || 0,
+      ts: Date.now()
+    };
+    if (typeof storageSetItem === 'function') {
+      storageSetItem(key, progressData);
+    }
+  },
+
+  get: function(videoId) {
+    if (!videoId) return null;
+    var key = 'BiliTube-video-progress-' + videoId;
+    if (typeof storageGetItem === 'function') {
+      var data = storageGetItem(key);
+      if (data && typeof data === 'object') {
+        var age = Date.now() - (data.ts || 0);
+        if (age < 7 * 24 * 60 * 60 * 1000) {
+          return data;
+        }
+      }
+    }
+    return null;
+  },
+
+  clear: function(videoId) {
+    if (!videoId) return;
+    var key = 'BiliTube-video-progress-' + videoId;
+    if (typeof storageRemoveItem === 'function') {
+      storageRemoveItem(key);
+    }
+  },
+
+  bind: function(videoEl, videoId) {
+    var self = this;
+    if (!videoEl || !videoId) return;
+    this.currentVideoId = videoId;
+    var progress = this.get(videoId);
+    var videoContainer = videoEl.closest('.BiliTube-video-container');
+    if (progress && progress.currentTime > 5 && videoContainer) {
+      var resumeBtn = document.createElement('button');
+      resumeBtn.className = 'BiliTube-resume-btn';
+      var percent = progress.duration ? Math.round((progress.currentTime / progress.duration) * 100) : 0;
+      resumeBtn.textContent = '继续播放 (已观看 ' + percent + '%)';
+      resumeBtn.onclick = function() {
+        videoEl.currentTime = progress.currentTime;
+        resumeBtn.remove();
+        videoContainer.classList.remove('BiliTube-video-has-resume');
+      };
+      videoContainer.appendChild(resumeBtn);
+      videoContainer.classList.add('BiliTube-video-has-resume');
+    }
+    var saveProgress = function() {
+      var ct = videoEl.currentTime;
+      var dur = videoEl.duration;
+      if (ct && dur) {
+        self.save(videoId, ct, dur);
+      }
+    };
+    videoEl.addEventListener('timeupdate', function() {
+      var now = Date.now();
+      if (now - self.lastSaveTime > self.saveDelay) {
+        saveProgress();
+        self.lastSaveTime = now;
+      }
+    });
+    videoEl.addEventListener('seeking', saveProgress);
+    videoEl.addEventListener('pause', saveProgress);
+    videoEl.addEventListener('ended', function() {
+      self.clear(videoId);
+    });
+  },
+
+  unbind: function() {
+    this.currentVideoId = '';
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+  }
+};
 
 var BiliTubeSeekPreload = {
   timer: null,
@@ -175,6 +375,7 @@ function playerDetectQn() {
 
 function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
   if (!videoEl || !cid) return Promise.reject(new Error('no_cid'));
+  BiliTubeVideoChecker.markRetry(bvid, aid, cid);
   var qs = '';
   if (bvid) {
     qs = 'bvid=' + encodeURIComponent(bvid);
@@ -211,6 +412,7 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
         banner.textContent = '';
         banner.style.display = 'none';
       }
+      BiliTubeVideoChecker.currentRetry = 0;
       return streamUrl;
     })
     .catch(function (err) {
@@ -220,11 +422,79 @@ function playerLoadPlayUrl(videoEl, bvid, aid, cid) {
         if (err && err.message === 'playurl_api') {
           msg = '视频播放接口返回异常，请稍后重试。';
         }
-        banner.textContent = msg;
+        if (BiliTubeVideoChecker.canRetry()) {
+          banner.innerHTML = msg + ' <button type="button" class="BiliTube-retry-btn" onclick="playerRetryLoad()">重新加载</button>';
+        } else {
+          banner.innerHTML = msg + '<br><button type="button" class="BiliTube-retry-btn" onclick="playerRetryLoad()">重新加载</button>';
+        }
         banner.style.display = 'block';
       }
       throw err;
     });
+}
+
+function playerHandleStall(videoEl) {
+  if (!videoEl) return;
+  var banner = document.getElementById('BiliTube-video-error');
+  var videoContainer = videoEl.closest('.BiliTube-video-container');
+  if (videoContainer && videoContainer.classList.contains('BiliTube-video-retrying')) {
+    return;
+  }
+  if (!BiliTubeVideoChecker.canRetry()) {
+    if (banner) {
+      banner.innerHTML = '视频加载缓慢，请检查网络连接。<button type="button" class="BiliTube-retry-btn" onclick="playerRetryLoad()">重新加载</button>';
+      banner.style.display = 'block';
+    }
+    return;
+  }
+  if (banner) {
+    banner.innerHTML = '视频加载中，请稍候...';
+    banner.style.display = 'block';
+  }
+  if (videoContainer) {
+    videoContainer.classList.add('BiliTube-video-retrying');
+  }
+  var delay = BiliTubeVideoChecker.getNextDelay();
+  if (BiliTubeVideoChecker.timer) {
+    clearTimeout(BiliTubeVideoChecker.timer);
+  }
+  BiliTubeVideoChecker.timer = setTimeout(function() {
+    if (videoContainer) {
+      videoContainer.classList.remove('BiliTube-video-retrying');
+    }
+    BiliTubeVideoChecker.clearVideoSource(videoEl);
+    if (BiliTubeVideoChecker.lastBvid || BiliTubeVideoChecker.lastAid) {
+      playerLoadPlayUrl(videoEl, BiliTubeVideoChecker.lastBvid, BiliTubeVideoChecker.lastAid, BiliTubeVideoChecker.lastCid).catch(function() {});
+    }
+    if (banner) {
+      banner.style.display = 'none';
+    }
+  }, delay);
+}
+
+function playerRetryLoad() {
+  var videoEl = document.getElementById('BiliTube-video');
+  var banner = document.getElementById('BiliTube-video-error');
+  if (!videoEl) return;
+  BiliTubeVideoChecker.reset();
+  BiliTubeVideoChecker.markRetry(BiliTubeVideoChecker.lastBvid, BiliTubeVideoChecker.lastAid, BiliTubeVideoChecker.lastCid);
+  BiliTubeVideoChecker.clearVideoSource(videoEl);
+  if (banner) {
+    banner.innerHTML = '正在重新加载...';
+    banner.style.display = 'block';
+  }
+  if (BiliTubeVideoChecker.lastBvid || BiliTubeVideoChecker.lastAid) {
+    playerLoadPlayUrl(videoEl, BiliTubeVideoChecker.lastBvid, BiliTubeVideoChecker.lastAid, BiliTubeVideoChecker.lastCid).then(function() {
+      if (banner) {
+        banner.style.display = 'none';
+      }
+    }).catch(function() {
+      if (banner) {
+        banner.innerHTML = '视频加载失败，请稍后重试。<button type="button" class="BiliTube-retry-btn" onclick="playerRetryLoad()">重新加载</button>';
+        banner.style.display = 'block';
+      }
+    });
+  }
 }
 
 function BiliTubeResetCommentState(aid) {
@@ -270,7 +540,13 @@ function BiliTubeLoadVideoById(id) {
       }
       var descEl = document.getElementById('BiliTube-video-desc');
       if (descEl) {
-        descEl.textContent = desc;
+        var descText = desc || '';
+        if (descText.trim()) {
+          descEl.textContent = descText;
+          descEl.style.display = 'block';
+        } else {
+          descEl.style.display = 'none';
+        }
       }
       var nameEl = document.getElementById('BiliTube-author-name');
       if (nameEl) {
@@ -332,6 +608,7 @@ function BiliTubeLoadVideoById(id) {
       }
       playerRenderEpisodes(pages, cid, bvid, aid, videoEl);
       BiliTubeSeekPreload.bind(videoEl);
+      BiliTubeVideoProgress.bind(videoEl, bvid || (aid ? String(aid) : '') || raw);
       Promise.all([
         playerLoadPlayUrl(videoEl, bvid, aid, cid).then(function(url) {
           if (url) {

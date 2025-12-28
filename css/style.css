@@ -1,7 +1,7 @@
 :root {
-  /* Colors */
-  --primary-color: #2196F3; /* Bili Blue */
-  --secondary-color: #F44336; /* Tube Red */
+  /* 颜色 */
+  --primary-color: #2196F3; /* B站蓝 */
+  --secondary-color: #F44336; /* Tube红 */
   --background-color: #F9F9F9;
   --surface-color: #FFFFFF;
   --text-primary: #212121;
@@ -9,20 +9,20 @@
   --divider-color: #E0E0E0;
   --hover-color: #F5F5F5;
   
-  /* Shadows */
+  /* 阴影 */
   --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
   --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
   --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
 
-  /* Spacing */
+  /* 间距 */
   --header-height: 64px;
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 72px;
 
-  /* Radius */
-  --radius-btn: 8px;         /* 4-8px for buttons, choose 8px */
-  --radius-card: 12px;       /* 8-12px for cards/containers, choose 12px */
-  --radius-chip: 16px;       /* chips/pills */
+  /* 圆角 */
+  --radius-btn: 8px;         /* 按钮圆角 4-8px，选择 8px */
+  --radius-card: 12px;       /* 卡片/容器圆角 8-12px，选择 12px */
+  --radius-chip: 16px;       /* 芯片/胶囊状 */
 }
 
 [data-theme="dark"] {
@@ -130,7 +130,7 @@ body {
   40% { transform: scale(1); }
 }
 
-/* Layout */
+/* 布局 */
 .app-container {
   display: flex;
   min-height: 100vh;
@@ -360,7 +360,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* Tags Bar */
+/* 标签栏 */
 .tags-bar {
   display: flex;
   gap: 12px;
@@ -1807,7 +1807,7 @@ body {
   margin-right: 0;
 }
 
-/* Responsive */
+/* 响应式设计 */
 @media (max-width: 600px) {
   .header-center {
     max-width: none;

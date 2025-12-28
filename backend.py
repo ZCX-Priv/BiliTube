@@ -241,7 +241,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 resp_headers = resp.headers
                 raw_body = resp.read()
         except Exception as e:
-            logging.warning("Proxy request failed: %s", e)
+            logging.warning("代理请求失败: %s", e)
             self.send_response(502)
             self.send_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -365,7 +365,7 @@ def run_server():
             server.shutdown()
             break
         except Exception as e:
-            logging.error("Server error, restarting: %s", e)
+            logging.error("服务器错误，正在重启: %s", e)
             time.sleep(1)
 
 

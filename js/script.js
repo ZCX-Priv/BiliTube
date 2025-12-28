@@ -301,7 +301,7 @@ function BiliTubeConfirm(message) {
   });
 }
 
-/* --- Loading Screen --- */
+/* --- 加载界面 --- */
 function initLoadingScreen() {
   const loadingScreen = document.getElementById('loading-screen');
   const loadingStatus = document.getElementById('loading-status');
@@ -358,7 +358,7 @@ function withLoader(container, loadFn, delay = 300) {
   }, delay);
 }
 
-/* --- Theme Toggle --- */
+/* --- 主题切换 --- */
 function initTheme() {
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = document.getElementById('theme-icon');
@@ -387,22 +387,23 @@ function initTheme() {
 function updateThemeIcon(isDark) {
   const themeIcon = document.getElementById('theme-icon');
   if (isDark) {
-    // Sun Icon
+    // 太阳图标
+    // 
     themeIcon.innerHTML = '<path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>';
   } else {
-    // Moon Icon
+    // 月亮图标
     themeIcon.innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
   }
 }
 
-/* --- Video Grid --- */
+/* --- 视频网格 --- */
 function initVideoGrid() {
   const videoGrid = document.getElementById('video-grid');
   if (!videoGrid) return;
   videoGrid.innerHTML = '';
 }
 
-/* --- Search Suggestions --- */
+/* --- 搜索建议 --- */
 const SEARCH_HISTORY_KEY = 'BiliTube-search-history';
 
 function escapeHtml(text) {
@@ -575,7 +576,7 @@ function selectSuggestion(text) {
   goToSearch('videos', text);
 }
 
-/* --- Sidebar --- */
+/* --- 侧边栏 --- */
 function initSidebar() {
   const menuBtn = document.querySelector('.menu-btn');
   if (!menuBtn) return;
@@ -591,7 +592,7 @@ function initSidebar() {
   });
 }
 
-/* --- Tags --- */
+/* --- 标签 --- */
 function initTags() {
   const tags = document.querySelectorAll('.tag-chip');
   tags.forEach(tag => {
@@ -602,7 +603,7 @@ function initTags() {
   });
 }
 
-/* --- SPA Router --- */
+/* --- 单页应用路由 --- */
 const routes = {
   '/home': 'view-home',
   '/subscriptions': 'view-subscriptions',

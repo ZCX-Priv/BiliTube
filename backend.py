@@ -17,6 +17,7 @@ DEFAULT_CONFIG = {
     "scheme": "http",
     "log_level": 3,
     "url_regex": r"https?://[^\"'\s]+",
+    "cookie": "",
 }
 
 
@@ -78,6 +79,9 @@ def load_config():
             pass
     if url_regex is not None:
         cfg["url_regex"] = url_regex
+    cookie = os.environ.get("BiliTube_cookie")
+    if cookie:
+        cfg["cookie"] = cookie
     return cfg
 
 
@@ -223,6 +227,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                     "application/json,text/javascript,*/*;q=0.01"
                 )
         apply_auto_referer_and_origin(outgoing_headers, target)
+        if CONFIG.get("cookie") and parsed_target.path == "/x/web-interface/wbi/search/type":
+            outgoing_headers["Cookie"] = CONFIG["cookie"]
         req = urllib.request.Request(
             target,
             data=body,

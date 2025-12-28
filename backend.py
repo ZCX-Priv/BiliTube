@@ -16,10 +16,6 @@ DEFAULT_CONFIG = {
     "port": 8000,
     "scheme": "http",
     "log_level": 3,
-    "user_agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-    ),
     "url_regex": r"https?://[^\"'\s]+",
 }
 
@@ -65,7 +61,6 @@ def load_config():
     port = os.environ.get("BiliTube_PORT")
     scheme = os.environ.get("BiliTube_SCHEME")
     log_level = os.environ.get("BiliTube_LOG_LEVEL")
-    user_agent = os.environ.get("BiliTube_USER_AGENT")
     url_regex = os.environ.get("BiliTube_URL_REGEX")
     if host:
         cfg["host"] = host
@@ -81,8 +76,6 @@ def load_config():
             cfg["log_level"] = int(log_level)
         except ValueError:
             pass
-    if user_agent:
-        cfg["user_agent"] = user_agent
     if url_regex is not None:
         cfg["url_regex"] = url_regex
     return cfg
@@ -222,19 +215,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             if lk in ("host", "connection", "origin", "referer", "cookie"):
                 continue
             outgoing_headers[key] = value
-        if "User-Agent" not in outgoing_headers:
-            outgoing_headers["User-Agent"] = CONFIG["user_agent"]
         parsed_target = urllib.parse.urlsplit(target)
         hostname = parsed_target.hostname or ""
         if hostname.endswith("bilibili.com") or hostname.endswith("hdslb.com"):
-            cookie = (
-                os.environ.get("BiliTube_Cookie")
-                or os.environ.get("BiliTube_COOKIE")
-                or os.environ.get("BILIBILI_COOKIE")
-                or os.environ.get("BiliTube_COOKIE")
-            )
-            if cookie:
-                outgoing_headers["Cookie"] = cookie
             if "Accept" not in outgoing_headers:
                 outgoing_headers["Accept"] = (
                     "application/json,text/javascript,*/*;q=0.01"
@@ -291,18 +274,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(400, "Missing or invalid target url")
             return
         ua = self.headers.get("User-Agent")
-        headers = {"User-Agent": ua or CONFIG["user_agent"]}
+        headers = {}
+        if ua:
+            headers["User-Agent"] = ua
         parsed_target = urllib.parse.urlsplit(target)
         hostname = parsed_target.hostname or ""
-        if hostname.endswith("bilibili.com") or hostname.endswith("hdslb.com"):
-            cookie = (
-                os.environ.get("BiliTube_Cookie")
-                or os.environ.get("BiliTube_COOKIE")
-                or os.environ.get("BILIBILI_COOKIE")
-                or os.environ.get("BiliTube_COOKIE")
-            )
-            if cookie:
-                headers["Cookie"] = cookie
         apply_auto_referer_and_origin(headers, target)
         req = urllib.request.Request(target, headers=headers, method="GET")
         try:

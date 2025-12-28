@@ -88,36 +88,29 @@ function mapHomePopularItem(item) {
 
 function createHomeCardHtml(video, indexOffset) {
   const safeId = encodeURIComponent(video.id || indexOffset || '');
-  const cover =
-    video.cover || 'https://via.placeholder.com/300x200?text=BiliTube';
+  const cover = video.cover || '';
   const channelName = video.channel || 'UP 主';
   const viewsText = video.views || '';
   const timeText = video.time || '';
   const meta = [viewsText, timeText].filter(Boolean).join(' · ');
   const duration = video.duration || '';
   const idx = Number.isFinite(indexOffset) ? indexOffset : 0;
-  const avatarSeed = 1000 + idx;
   let avatar = video.avatar || '';
   if (avatar && typeof homeParseCoverUrl === 'function') {
     avatar = homeParseCoverUrl(avatar);
   }
-  const avatarStyle = avatar
-    ? "background-image: url('" + avatar + "'); background-size: cover;"
-    : "background-color: var(--divider-color);";
   return (
     '<div class="video-card" onclick="window.location.hash=\'#/video/' +
     safeId +
     '\'">' +
     '<div class="thumbnail-container">' +
-    '<img src="' +
-    cover +
-    '" alt="Thumbnail" class="thumbnail-img" loading="lazy">' +
+    '<img src="' + THUMBNAIL_PLACEHOLDER + '" alt="Thumbnail" class="thumbnail-img" loading="lazy"' +
+    (cover ? ' data-src="' + cover + '"' : '') + '>' +
     (duration ? '<span class="video-duration">' + duration + '</span>' : '') +
     '</div>' +
     '<div class="video-info">' +
-    '<div class="channel-avatar" style="' +
-    (avatar ? avatarStyle : 'background-color: var(--divider-color);') +
-    '"></div>' +
+    '<img class="channel-avatar" src="' + AVATAR_PLACEHOLDER + '" alt="" loading="lazy"' +
+    (avatar ? ' data-src="' + avatar + '"' : '') + '>' +
     '<div class="video-details">' +
     '<h3 class="video-title">' +
     video.title +
@@ -130,6 +123,23 @@ function createHomeCardHtml(video, indexOffset) {
     '</div>' +
     '</div>'
   );
+}
+
+function insertVideosOptimized(grid, htmlArray) {
+  if (!htmlArray.length || !grid) return;
+  if (htmlArray.length < 5) {
+    htmlArray.forEach(function(html) {
+      grid.insertAdjacentHTML('beforeend', html);
+    });
+    return;
+  }
+  var fragment = document.createDocumentFragment();
+  var temp = document.createElement('div');
+  temp.innerHTML = htmlArray.join('');
+  while (temp.firstChild) {
+    fragment.appendChild(temp.firstChild);
+  }
+  grid.appendChild(fragment);
 }
 
 function loadHomeVideos(tab, page, replace) {
@@ -198,14 +208,12 @@ function loadHomeVideos(tab, page, replace) {
             : items.map((it) => mapHomeRcmdItem(it));
 
         const baseIndex = (page - 1) * items.length;
-        const html = mapped
-          .map((v, idx) => createHomeCardHtml(v, baseIndex + idx))
-          .join('');
+        const htmlArray = mapped.map((v, idx) => createHomeCardHtml(v, baseIndex + idx));
 
         if (replace) {
-          grid.innerHTML = html;
+          grid.innerHTML = htmlArray.join('');
         } else {
-          grid.insertAdjacentHTML('beforeend', html);
+          insertVideosOptimized(grid, htmlArray);
         }
       })
       .catch(() => {

@@ -10,8 +10,91 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearch();
     initTags();
     initRouter();
+    initImagePlaceholders();
   });
 });
+
+const THUMBNAIL_PLACEHOLDER = 'img/thumbnail-placeholder.png';
+const AVATAR_PLACEHOLDER = 'img/avatar-placeholder.png';
+
+function initImagePlaceholders() {
+  document.body.addEventListener('error', function(e) {
+    var target = e.target;
+    if (target.tagName === 'IMG') {
+      var src = target.getAttribute('src') || '';
+      if (src.indexOf('/proxy?u=') !== -1) {
+        if (target.classList.contains('thumbnail-img') || 
+            target.closest('.thumbnail-container')) {
+          target.src = THUMBNAIL_PLACEHOLDER;
+        } else if (target.classList.contains('channel-avatar') ||
+                   target.closest('.channel-avatar')) {
+          target.src = AVATAR_PLACEHOLDER;
+        }
+      }
+    }
+  }, true);
+  
+  function replaceWithRealImage(img) {
+    var dataSrc = img.getAttribute('data-src');
+    if (!dataSrc) return;
+    img.removeAttribute('data-src');
+    var realImg = new Image();
+    realImg.onload = function() {
+      img.src = dataSrc;
+    };
+    realImg.onerror = function() {};
+    realImg.src = dataSrc;
+  }
+  
+  document.body.addEventListener('load', function(e) {
+    var target = e.target;
+    if (target.tagName === 'IMG') {
+      var dataSrc = target.getAttribute('data-src');
+      if (dataSrc && target.src !== dataSrc) {
+        var currentSrc = target.getAttribute('src') || '';
+        if (currentSrc.indexOf('placeholder') !== -1) {
+          replaceWithRealImage(target);
+        }
+      }
+    }
+  }, true);
+}
+
+function getPlaceholderImage(isAvatar) {
+  return isAvatar ? AVATAR_PLACEHOLDER : THUMBNAIL_PLACEHOLDER;
+}
+
+const BiliTubeDataCache = {
+  maxSize: 50,
+  data: {},
+  _lock: {},
+  
+  get: function(key) {
+    if (this.data[key]) {
+      var entry = this.data[key];
+      if (Date.now() - entry.ts < 300000) {
+        return entry.data;
+      }
+      delete this.data[key];
+    }
+    return null;
+  },
+  
+  set: function(key, data) {
+    var keys = Object.keys(this.data);
+    if (keys.length >= this.maxSize) {
+      var oldestKey = keys.sort(function(a, b) {
+        return this.data[a].ts - this.data[b].ts;
+      }.bind(this))[0];
+      delete this.data[oldestKey];
+    }
+    this.data[key] = { data: data, ts: Date.now() };
+  },
+  
+  clear: function() {
+    this.data = {};
+  }
+};
 
 function isMobileDevice() {
   const ua = navigator.userAgent || '';

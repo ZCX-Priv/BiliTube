@@ -164,9 +164,7 @@ function searchLoadMoreVideos() {
             return createHomeCardHtml(v, baseIndex + idx);
           }
           var safeId = encodeURIComponent(v.id || baseIndex + idx);
-          var cover =
-            v.cover ||
-            'https://via.placeholder.com/300x200?text=BiliTube+Search';
+          var cover = v.cover || '';
           var channelName = v.channel || '';
           var viewsText = v.views || '';
           var meta = viewsText;
@@ -176,9 +174,8 @@ function searchLoadMoreVideos() {
             safeId +
             '\'">' +
             '<div class="thumbnail-container">' +
-            '<img src="' +
-            cover +
-            '" alt="Thumbnail" class="thumbnail-img" loading="lazy">' +
+            '<img src="' + THUMBNAIL_PLACEHOLDER + '" alt="Thumbnail" class="thumbnail-img" loading="lazy"' +
+            (cover ? ' data-src="' + cover + '" onload="this.src=this.getAttribute(\'data-src\')"' : '') + '>' +
             (duration
               ? '<span class="video-duration">' + duration + '</span>'
               : '') +
@@ -339,9 +336,8 @@ function searchLoadMoreUsers() {
             (user.desc || '') + (followers ? ' · ' + followers : '');
           return (
             '<div class="user-card">' +
-            '<div class="user-avatar" style="background-image: url(\'' +
-            avatar +
-            '\'); background-size: cover;"></div>' +
+            '<img class="user-avatar" src="' + AVATAR_PLACEHOLDER + '" alt="" loading="lazy"' +
+            (avatar ? ' data-src="' + avatar + '"' : '') + '>' +
             '<div class="user-info">' +
             '<div class="user-name">' +
             user.name +

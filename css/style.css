@@ -1623,6 +1623,7 @@ body {
   background-color: var(--divider-color);
   margin-right: 4px;
   flex-shrink: 0;
+  object-fit: cover;
 }
 
 .user-info {

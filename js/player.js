@@ -66,10 +66,24 @@ function playerAttachSource(videoEl, url) {
       } catch (e) {}
       window.BiliTubeHls = null;
     }
-    var hls = new window.Hls();
+    var hlsConfig = {
+      enableWorker: true,
+      lowLatencyMode: true,
+      xhrSetup: function(xhr, url) {
+        xhr.timeout = 15000;
+      },
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
+      maxBufferSize: 60 * 1024 * 1024,
+      maxBufferHole: 0.5
+    };
+    var hls = new window.Hls(hlsConfig);
     window.BiliTubeHls = hls;
     hls.loadSource(url);
     hls.attachMedia(videoEl);
+    hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
+      videoEl.currentTime = 0;
+    });
   } else {
     if (window.BiliTubeHls) {
       try {
@@ -88,11 +102,66 @@ function playerAttachSource(videoEl, url) {
     source.src = url;
     videoEl.setAttribute('data-src-hd', url);
     videoEl.setAttribute('data-src-sd', url);
+    videoEl.preload = 'auto';
+    videoEl.setAttribute('webkit-playsinline', 'true');
+    videoEl.setAttribute('playsinline', 'true');
     try {
       videoEl.load();
     } catch (e) {}
   }
 }
+
+var BiliTubeSeekPreload = {
+  timer: null,
+  lastTime: 0,
+  bufferMap: {},
+  currentUrl: '',
+  bind: function(videoEl) {
+    var self = this;
+    if (!videoEl) return;
+    videoEl.addEventListener('seeking', function() {
+      var ct = videoEl.currentTime;
+      var diff = Math.abs(ct - self.lastTime);
+      if (diff > 5 && self.currentUrl) {
+        self.preloadAround(videoEl, ct);
+      }
+      self.lastTime = ct;
+    });
+    videoEl.addEventListener('seeked', function() {
+      if (self.timer) {
+        clearTimeout(self.timer);
+        self.timer = null;
+      }
+    });
+    videoEl.addEventListener('waiting', function() {
+      var ct = videoEl.currentTime;
+      self.preloadAround(videoEl, ct);
+    });
+    videoEl.addEventListener('play', function() {
+      var ct = videoEl.currentTime;
+      self.preloadAround(videoEl, ct);
+    });
+  },
+  preloadAround: function(videoEl, time) {
+    var self = this;
+    if (!videoEl.src || !videoEl.src.indexOf) return;
+    if (videoEl.src.indexOf('/stream?u=') === -1) return;
+    var start = Math.max(0, time - 10);
+    var end = Math.min(videoEl.duration || 0, time + 30);
+    if (end <= start) return;
+    var url = videoEl.src + '&range=' + Math.floor(start) + '-' + Math.floor(end);
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.setRequestHeader('Range', 'bytes=' + Math.floor(start) + '-' + Math.floor(end));
+      xhr.responseType = 'arraybuffer';
+      xhr.send();
+    }, 500);
+  }
+};
 
 function playerDetectQn() {
   var ua = navigator.userAgent || '';
@@ -262,10 +331,17 @@ function BiliTubeLoadVideoById(id) {
         }
       }
       playerRenderEpisodes(pages, cid, bvid, aid, videoEl);
-      playerLoadDanmaku(cid);
-      playerLoadComments(aid);
-      playerLoadRecommendations(bvid || '', aid);
-      return playerLoadPlayUrl(videoEl, bvid, aid, cid);
+      BiliTubeSeekPreload.bind(videoEl);
+      Promise.all([
+        playerLoadPlayUrl(videoEl, bvid, aid, cid).then(function(url) {
+          if (url) {
+            BiliTubeSeekPreload.currentUrl = url;
+          }
+        }).catch(function() {}),
+        playerLoadDanmaku(cid),
+        playerLoadComments(aid),
+        playerLoadRecommendations(bvid || '', aid)
+      ]).then(function() {}).catch(function() {});
     })
     .catch(function (err) {
       var banner = document.getElementById('BiliTube-video-error');

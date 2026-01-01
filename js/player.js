@@ -124,6 +124,56 @@ var BiliTubeCommentState = {
   finished: false
 };
 
+var BiliTubeAutoPlayState = {
+  enabled: false,
+  timer: null,
+  nextId: ''
+};
+
+function playerCancelAutoPlayTimer() {
+  if (BiliTubeAutoPlayState.timer) {
+    clearTimeout(BiliTubeAutoPlayState.timer);
+    BiliTubeAutoPlayState.timer = null;
+  }
+}
+
+function playerUpdateAutoPlayToggle() {
+  var toggles = document.querySelectorAll('.BiliTube-auto-play-toggle');
+  toggles.forEach(function (btn) {
+    btn.classList.toggle('BiliTube-auto-play-on', BiliTubeAutoPlayState.enabled);
+    btn.setAttribute('aria-pressed', BiliTubeAutoPlayState.enabled ? 'true' : 'false');
+  });
+}
+
+function playerSetAutoPlayEnabled(enabled) {
+  BiliTubeAutoPlayState.enabled = !!enabled;
+  if (!BiliTubeAutoPlayState.enabled) {
+    playerCancelAutoPlayTimer();
+  }
+  playerUpdateAutoPlayToggle();
+}
+
+function playerHandleAutoPlayEnded() {
+  if (!BiliTubeAutoPlayState.enabled) {
+    return;
+  }
+  playerCancelAutoPlayTimer();
+  var nextId = BiliTubeAutoPlayState.nextId || '';
+  if (!nextId) {
+    return;
+  }
+  BiliTubeAutoPlayState.timer = setTimeout(function () {
+    if (!BiliTubeAutoPlayState.enabled) {
+      return;
+    }
+    if (!BiliTubeAutoPlayState.nextId) {
+      return;
+    }
+    window.location.hash =
+      '#/video/' + encodeURIComponent(BiliTubeAutoPlayState.nextId);
+  }, 3000);
+}
+
 function playerProxyUrl(u) {
   return '/proxy?u=' + encodeURIComponent(u);
 }
@@ -530,6 +580,7 @@ function BiliTubeLoadVideoById(id) {
   if (!raw) return;
   var isBvid = /^BV/i.test(raw);
   var key = isBvid ? 'bvid' : 'aid';
+  playerCancelAutoPlayTimer();
   var api =
     'https://api.bilibili.com/x/web-interface/view?' +
     key +
@@ -1058,10 +1109,36 @@ function playerLoadRecommendations(bvid, aid) {
     return;
   }
   container.innerHTML = '';
+  var header = document.createElement('div');
+  header.className = 'BiliTube-rec-header';
   var title = document.createElement('div');
   title.className = 'BiliTube-section-title';
   title.textContent = '相关推荐';
-  container.appendChild(title);
+  header.appendChild(title);
+  var toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'BiliTube-auto-play-toggle';
+  toggle.setAttribute('aria-label', '自动连播开关');
+  toggle.setAttribute(
+    'aria-pressed',
+    BiliTubeAutoPlayState.enabled ? 'true' : 'false'
+  );
+  var label = document.createElement('span');
+  label.className = 'BiliTube-auto-play-text';
+  label.textContent = '自动连播';
+  var switchEl = document.createElement('span');
+  switchEl.className = 'BiliTube-auto-play-switch';
+  var knob = document.createElement('span');
+  knob.className = 'BiliTube-auto-play-switch-knob';
+  switchEl.appendChild(knob);
+  toggle.appendChild(label);
+  toggle.appendChild(switchEl);
+  toggle.addEventListener('click', function () {
+    playerSetAutoPlayEnabled(!BiliTubeAutoPlayState.enabled);
+  });
+  header.appendChild(toggle);
+  container.appendChild(header);
+  playerUpdateAutoPlayToggle();
   var apiBase = 'https://api.bilibili.com/x/web-interface/archive/related?';
   var qs = bvid
     ? 'bvid=' + encodeURIComponent(bvid)
@@ -1073,6 +1150,15 @@ function playerLoadRecommendations(bvid, aid) {
         throw new Error('related_api');
       }
       var list = res.data || [];
+       BiliTubeAutoPlayState.nextId = '';
+       if (!list || !list.length) {
+         return;
+       }
+       var first = list[0] || {};
+       var firstId = first.bvid || (first.aid ? String(first.aid) : '');
+       if (firstId) {
+         BiliTubeAutoPlayState.nextId = firstId;
+       }
       list.slice(0, 10).forEach(function (item) {
         var rec = document.createElement('div');
         rec.className = 'BiliTube-rec-item';
@@ -1110,7 +1196,9 @@ function playerLoadRecommendations(bvid, aid) {
         container.appendChild(rec);
       });
     })
-    .catch(function () {});
+    .catch(function () {
+      BiliTubeAutoPlayState.nextId = '';
+    });
 }
 
 function playerShowMoreReplies(aid, rpid, box, controlEl) {

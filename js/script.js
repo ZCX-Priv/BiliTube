@@ -813,6 +813,11 @@ function bindVideoView(view) {
         BiliTubeVideoChecker.stopStallTimer();
       }
     });
+    video.addEventListener('ended', function() {
+      if (typeof playerHandleAutoPlayEnded === 'function') {
+        playerHandleAutoPlayEnded();
+      }
+    });
   }
 
   if (qualityToggle && video) {

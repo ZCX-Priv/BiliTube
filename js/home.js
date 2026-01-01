@@ -157,6 +157,16 @@ function insertVideosOptimized(grid, htmlArray) {
   grid.appendChild(fragment);
 }
 
+function homeShuffle(list) {
+  if (!Array.isArray(list) || list.length < 2) return;
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = list[i];
+    list[i] = list[j];
+    list[j] = tmp;
+  }
+}
+
 function loadHomeVideos(tab, page, replace) {
   const grid = document.getElementById('video-grid');
   if (!grid || HOME_STATE.loading) return;
@@ -178,7 +188,7 @@ function loadHomeVideos(tab, page, replace) {
       encodeURIComponent(
         'https://api.bilibili.com/x/web-interface/popular?ps=20&pn=' + page
       );
-  } else {
+  } else if (tab === 'rcmd') {
     const base =
       'https://api.bilibili.com/x/web-interface/wbi/index/top/feed/rcmd';
     const params =
@@ -188,6 +198,117 @@ function loadHomeVideos(tab, page, replace) {
       page +
       '&fetch_row=20';
     url = '/proxy?u=' + encodeURIComponent(base + '?' + params);
+  } else if (tab === 'all') {
+    const baseRcmd =
+      'https://api.bilibili.com/x/web-interface/wbi/index/top/feed/rcmd';
+    const paramsRcmd =
+      'fresh_type=4&ps=20&fresh_idx=' +
+      page +
+      '&fresh_idx_1h=' +
+      page +
+      '&fetch_row=20';
+    const urlRcmd =
+      '/proxy?u=' + encodeURIComponent(baseRcmd + '?' + paramsRcmd);
+    const urlPopular =
+      '/proxy?u=' +
+      encodeURIComponent(
+        'https://api.bilibili.com/x/web-interface/popular?ps=20&pn=' + page
+      );
+    const doFetchAll = () => {
+      Promise.all([
+        fetch(urlRcmd)
+          .then(function(res) {
+            if (!res.ok) return null;
+            return res.json();
+          })
+          .catch(function() {
+            return null;
+          }),
+        fetch(urlPopular)
+          .then(function(res) {
+            if (!res.ok) return null;
+            return res.json();
+          })
+          .catch(function() {
+            return null;
+          })
+      ])
+        .then(function(results) {
+          const jsonRcmd = results[0];
+          const jsonPopular = results[1];
+          let itemsRcmd = [];
+          let itemsPopular = [];
+          if (
+            jsonRcmd &&
+            jsonRcmd.data &&
+            Array.isArray(jsonRcmd.data.item) &&
+            jsonRcmd.data.item.length
+          ) {
+            itemsRcmd = jsonRcmd.data.item;
+          }
+          if (
+            jsonPopular &&
+            jsonPopular.data &&
+            Array.isArray(jsonPopular.data.list) &&
+            jsonPopular.data.list.length
+          ) {
+            itemsPopular = jsonPopular.data.list;
+          }
+          let videos = [];
+          if (itemsRcmd.length) {
+            videos = videos.concat(
+              itemsRcmd.map(function(it) {
+                return mapHomeRcmdItem(it);
+              })
+            );
+          }
+          if (itemsPopular.length) {
+            videos = videos.concat(
+              itemsPopular.map(function(it) {
+                return mapHomePopularItem(it);
+              })
+            );
+          }
+          if (!videos.length) {
+            if (replace) {
+              grid.innerHTML =
+                '<div class="empty-result">暂无推荐内容</div>';
+            }
+            HOME_STATE.finished = true;
+            return;
+          }
+          homeShuffle(videos);
+          const baseIndex = (page - 1) * videos.length;
+          const htmlArray = videos.map(function(v, idx) {
+            return createHomeCardHtml(v, baseIndex + idx);
+          });
+          if (replace) {
+            grid.innerHTML = htmlArray.join('');
+            HOME_STATE.cachedTab = tab;
+            HOME_STATE.cachedHtml = grid.innerHTML;
+          } else {
+            insertVideosOptimized(grid, htmlArray);
+          }
+          homeRestoreScrollPosition();
+        })
+        .catch(function() {
+          if (replace) {
+            grid.innerHTML =
+              '<div class="empty-result">首页推荐加载失败，请稍后重试</div>';
+          }
+        })
+        .finally(function() {
+          HOME_STATE.loading = false;
+        });
+    };
+
+    const containerAll = grid.parentElement || grid;
+    if (typeof withLoader === 'function') {
+      withLoader(containerAll, doFetchAll, 200);
+    } else {
+      doFetchAll();
+    }
+    return;
   }
 
   const doFetch = () => {
@@ -270,7 +391,9 @@ function bindHomeTagInteractions() {
     tag.addEventListener('click', () => {
       const text = (tag.textContent || '').trim();
       let tab = 'rcmd';
-      if (text === '热门') {
+      if (text === '全部') {
+        tab = 'all';
+      } else if (text === '热门') {
         tab = 'popular';
       }
       HOME_STATE.currentTab = tab;
@@ -288,10 +411,10 @@ function initHomeView() {
   bindHomeScroll();
   if (grid.dataset.homeInitialized === 'true') return;
   grid.dataset.homeInitialized = 'true';
-  HOME_STATE.currentTab = 'rcmd';
+  HOME_STATE.currentTab = 'all';
   HOME_STATE.page = 1;
   HOME_STATE.finished = false;
-  loadHomeVideos('rcmd', 1, true);
+  loadHomeVideos('all', 1, true);
 }
 
 function handleHomeScroll() {

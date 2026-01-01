@@ -784,11 +784,10 @@ function bindVideoView(view) {
   });
 
   const video = view.querySelector('#BiliTube-video');
-  const qualityToggle = view.querySelector('#BiliTube-quality-toggle');
-  const danmakuToggle = view.querySelector('#BiliTube-danmaku-toggle');
   const errorBanner = view.querySelector('#BiliTube-video-error');
   const panelToggle = view.querySelector('.BiliTube-panel-toggle');
   const rightPanel = view.querySelector('.BiliTube-right-panel');
+  const actionButtons = view.querySelectorAll('.BiliTube-action-btn');
 
   if (video) {
     video.addEventListener('error', function(e) {
@@ -820,48 +819,16 @@ function bindVideoView(view) {
     });
   }
 
-  if (qualityToggle && video) {
-    qualityToggle.addEventListener('click', () => {
-      const hdSrc = video.getAttribute('data-src-hd') || '';
-      const sdSrc = video.getAttribute('data-src-sd') || hdSrc;
-      const source = video.querySelector('source');
-      if (!source || !hdSrc) return;
-
-      const currentQuality = video.getAttribute('data-quality') || 'hd';
-      const nextQuality = currentQuality === 'hd' ? 'sd' : 'hd';
-      const nextSrc = nextQuality === 'hd' ? hdSrc : sdSrc;
-
-      if (!nextSrc) return;
-
-      const wasPlaying = !video.paused && !video.ended;
-      video.pause();
-      source.src = nextSrc;
-      video.setAttribute('data-quality', nextQuality);
-      try {
-        video.load();
-      } catch (e) {
-      }
-
-      if (wasPlaying) {
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(() => {});
+  if (actionButtons && actionButtons.length) {
+    actionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const alreadyActive = btn.classList.contains('BiliTube-action-active');
+        if (!alreadyActive) {
+          btn.classList.add('BiliTube-action-active');
+        } else {
+          btn.classList.remove('BiliTube-action-active');
         }
-      }
-
-      const label = qualityToggle.querySelector('.BiliTube-control-label');
-      if (label) {
-        label.textContent = nextQuality === 'hd' ? '高清' : '标清';
-      }
-    });
-  }
-
-  if (danmakuToggle) {
-    danmakuToggle.addEventListener('click', () => {
-      danmakuToggle.classList.toggle('active');
-      if (typeof playerSetDanmakuEnabled === 'function') {
-        playerSetDanmakuEnabled(danmakuToggle.classList.contains('active'));
-      }
+      });
     });
   }
 

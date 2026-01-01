@@ -290,6 +290,335 @@ function playerAttachSource(videoEl, url) {
   }
 }
 
+var BiliTubePlayerState = {
+  playbackRates: [0.5, 1, 1.5, 2]
+};
+
+function playerGetControlBar() {
+  var videoEl = document.getElementById('BiliTube-video');
+  if (!videoEl) return null;
+  var section = videoEl.closest('.BiliTube-video-section');
+  if (!section) return null;
+  return section.querySelector('.BiliTube-player-control-bar');
+}
+
+function playerUpdatePlayButtonState() {
+  var bar = playerGetControlBar();
+  if (!bar) return;
+  var videoEl = document.getElementById('BiliTube-video');
+  if (!videoEl) return;
+  var btn = bar.querySelector('[data-action="toggle-play"]');
+  if (!btn) return;
+  var isPlaying = !videoEl.paused && !videoEl.ended;
+  var svg = btn.querySelector('svg');
+  if (!svg) return;
+  if (isPlaying) {
+    svg.innerHTML = '<path d="M8 5h3v14H8zM13 5h3v14h-3z"></path>';
+  } else {
+    svg.innerHTML = '<path d="M8 5v14l11-7z"></path>';
+  }
+}
+
+function playerUpdateSettingsState() {
+  var bar = playerGetControlBar();
+  if (!bar) return;
+  var videoEl = document.getElementById('BiliTube-video');
+  if (videoEl) {
+    var q = videoEl.getAttribute('data-quality') || 'hd';
+    var qualitySelect = bar.querySelector('.BiliTube-player-quality-select');
+    if (qualitySelect) {
+      qualitySelect.value = q === 'sd' ? 'sd' : 'hd';
+    }
+    var speedSelect = bar.querySelector('.BiliTube-player-speed-select');
+    if (speedSelect) {
+      var rate = videoEl.playbackRate || 1;
+      speedSelect.value = String(rate);
+    }
+  }
+  var danmakuItem = bar.querySelector('[data-type="danmaku"]');
+  if (danmakuItem) {
+    var enabled = true;
+    if (typeof BiliTubeDanmakuState !== 'undefined' && BiliTubeDanmakuState) {
+      enabled = !!BiliTubeDanmakuState.enabled;
+    }
+    danmakuItem.classList.toggle('active', enabled);
+  }
+  var danmakuToggle = document.getElementById('BiliTube-danmaku-toggle');
+  if (danmakuToggle && typeof BiliTubeDanmakuState !== 'undefined' && BiliTubeDanmakuState) {
+    danmakuToggle.classList.toggle('active', !!BiliTubeDanmakuState.enabled);
+  }
+}
+
+function playerSetupControlBar() {
+  var videoEl = document.getElementById('BiliTube-video');
+  if (!videoEl) return;
+  var section = videoEl.closest('.BiliTube-video-section');
+  if (!section) return;
+  var existing = section.querySelector('.BiliTube-player-control-bar');
+  if (existing) {
+    playerUpdatePlayButtonState();
+    playerUpdateSettingsState();
+    return;
+  }
+  var bar = document.createElement('div');
+  bar.className = 'BiliTube-player-control-bar';
+  var left = document.createElement('div');
+  left.className = 'BiliTube-player-controls-left';
+  var right = document.createElement('div');
+  right.className = 'BiliTube-player-controls-right';
+
+  function createBtn(text, title, action, extraClass) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'BiliTube-player-btn-icon';
+    if (extraClass) {
+      btn.className += ' ' + extraClass;
+    }
+    if (title) {
+      btn.title = title;
+    }
+    if (action) {
+      btn.setAttribute('data-action', action);
+    }
+    if (text) {
+      btn.textContent = text;
+    }
+    return btn;
+  }
+
+  var btnBack20 = createBtn('<<<', '快退 20 秒', 'seek-back-20');
+  var btnBack10 = createBtn('<<', '快退 10 秒', 'seek-back-10');
+  var btnBack5 = createBtn('<', '快退 5 秒', 'seek-back-5');
+
+  var playBtn = createBtn('', '播放/暂停', 'toggle-play', 'BiliTube-player-btn-play');
+  playBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
+
+  var btnForward5 = createBtn('>', '快进 5 秒', 'seek-forward-5');
+  var btnForward10 = createBtn('>>', '快进 10 秒', 'seek-forward-10');
+  var btnForward20 = createBtn('>>>', '快进 20 秒', 'seek-forward-20');
+
+  left.appendChild(btnBack20);
+  left.appendChild(btnBack10);
+  left.appendChild(btnBack5);
+  left.appendChild(playBtn);
+  left.appendChild(btnForward5);
+  left.appendChild(btnForward10);
+  left.appendChild(btnForward20);
+
+  var settingsBtn = createBtn('', '设置', 'toggle-settings');
+  settingsBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7 20c-1.1 0-2-.9-2-2s.9-2 2-2h10c1.1 0 2 .9 2 2s-.9 2-2 2H7zm-3-7c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2s-.9 2-2 2H6c-1.1 0-2-.9-2-2zm2-7c-1.1 0-2 .9-2 2s.9 2 2 2h4c1.1 0 2-.9 2-2S11.1 6 10 6H6z"></path></svg>';
+
+  var menu = document.createElement('div');
+  menu.className = 'BiliTube-player-settings-menu';
+
+  var qualityItem = document.createElement('div');
+  qualityItem.className = 'BiliTube-player-menu-item';
+  qualityItem.setAttribute('data-type', 'quality');
+  var qualityLabel = document.createElement('span');
+  qualityLabel.textContent = '画质';
+  var qualitySelect = document.createElement('select');
+  qualitySelect.className = 'BiliTube-player-select BiliTube-player-quality-select';
+  var optionHd = document.createElement('option');
+  optionHd.value = 'hd';
+  optionHd.textContent = '高清';
+  var optionSd = document.createElement('option');
+  optionSd.value = 'sd';
+  optionSd.textContent = '标清';
+  qualitySelect.appendChild(optionHd);
+  qualitySelect.appendChild(optionSd);
+  qualityItem.appendChild(qualityLabel);
+  qualityItem.appendChild(qualitySelect);
+
+  var speedItem = document.createElement('div');
+  speedItem.className = 'BiliTube-player-menu-item';
+  speedItem.setAttribute('data-type', 'speed');
+  var speedLabel = document.createElement('span');
+  speedLabel.textContent = '倍速';
+  var speedSelect = document.createElement('select');
+  speedSelect.className = 'BiliTube-player-select BiliTube-player-speed-select';
+  var rates = BiliTubePlayerState.playbackRates || [0.5, 1, 1.5, 2];
+  rates.forEach(function (r) {
+    var opt = document.createElement('option');
+    opt.value = String(r);
+    opt.textContent = (r % 1 === 0 ? String(r) : r.toFixed(1)) + 'x';
+    speedSelect.appendChild(opt);
+  });
+  speedItem.appendChild(speedLabel);
+  speedItem.appendChild(speedSelect);
+
+  var danmakuItem = document.createElement('div');
+  danmakuItem.className = 'BiliTube-player-menu-item';
+  danmakuItem.setAttribute('data-type', 'danmaku');
+  var danmakuLabel = document.createElement('span');
+  danmakuLabel.textContent = '弹幕';
+  var toggle = document.createElement('div');
+  toggle.className = 'BiliTube-player-toggle-switch';
+  danmakuItem.appendChild(danmakuLabel);
+  danmakuItem.appendChild(toggle);
+
+  menu.appendChild(qualityItem);
+  menu.appendChild(speedItem);
+  menu.appendChild(danmakuItem);
+
+  right.appendChild(settingsBtn);
+  right.appendChild(menu);
+
+  bar.appendChild(left);
+  bar.appendChild(right);
+  section.appendChild(bar);
+
+  bar.addEventListener('click', function (e) {
+    var target = e.target;
+    var btn = target.closest('button');
+    if (!btn || !bar.contains(btn)) return;
+    var action = btn.getAttribute('data-action') || '';
+    if (!action) return;
+    var v = document.getElementById('BiliTube-video');
+    if (!v) return;
+    if (action === 'toggle-play') {
+      if (v.paused || v.ended) {
+        var p = v.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function () {});
+        }
+      } else {
+        v.pause();
+      }
+      playerUpdatePlayButtonState();
+    } else if (action === 'seek-back-5') {
+      if (!isNaN(v.currentTime)) {
+        v.currentTime = Math.max(0, v.currentTime - 5);
+      }
+    } else if (action === 'seek-back-10') {
+      if (!isNaN(v.currentTime)) {
+        v.currentTime = Math.max(0, v.currentTime - 10);
+      }
+    } else if (action === 'seek-back-20') {
+      if (!isNaN(v.currentTime)) {
+        v.currentTime = Math.max(0, v.currentTime - 20);
+      }
+    } else if (action === 'seek-forward-5') {
+      if (!isNaN(v.currentTime) && !isNaN(v.duration)) {
+        v.currentTime = Math.min(v.duration, v.currentTime + 5);
+      }
+    } else if (action === 'seek-forward-10') {
+      if (!isNaN(v.currentTime) && !isNaN(v.duration)) {
+        v.currentTime = Math.min(v.duration, v.currentTime + 10);
+      }
+    } else if (action === 'seek-forward-20') {
+      if (!isNaN(v.currentTime) && !isNaN(v.duration)) {
+        v.currentTime = Math.min(v.duration, v.currentTime + 20);
+      }
+    } else if (action === 'toggle-settings') {
+      right.classList.toggle('BiliTube-settings-open');
+    }
+  });
+
+  menu.addEventListener('click', function (e) {
+    var item = e.target.closest('.BiliTube-player-menu-item');
+    if (!item || !menu.contains(item)) return;
+    var type = item.getAttribute('data-type') || '';
+    var v = document.getElementById('BiliTube-video');
+    if (!v) return;
+    if (type === 'danmaku') {
+      var enabled = true;
+      if (typeof BiliTubeDanmakuState !== 'undefined' && BiliTubeDanmakuState) {
+        enabled = !BiliTubeDanmakuState.enabled;
+      } else {
+        enabled = !item.classList.contains('active');
+      }
+      if (typeof playerSetDanmakuEnabled === 'function') {
+        playerSetDanmakuEnabled(enabled);
+      }
+      playerUpdateSettingsState();
+    }
+  });
+
+  videoEl.addEventListener('play', function () {
+    playerUpdatePlayButtonState();
+  });
+  videoEl.addEventListener('pause', function () {
+    playerUpdatePlayButtonState();
+  });
+  videoEl.addEventListener('ended', function () {
+    playerUpdatePlayButtonState();
+  });
+  videoEl.addEventListener('ratechange', function () {
+    playerUpdateSettingsState();
+  });
+
+  var qualityToggle = document.getElementById('BiliTube-quality-toggle');
+  if (qualityToggle) {
+    qualityToggle.addEventListener('click', function () {
+      playerUpdateSettingsState();
+    });
+  }
+  var danmakuToggle = document.getElementById('BiliTube-danmaku-toggle');
+  if (danmakuToggle) {
+    danmakuToggle.addEventListener('click', function () {
+      if (typeof BiliTubeDanmakuState !== 'undefined' && BiliTubeDanmakuState) {
+        BiliTubeDanmakuState.enabled = danmakuToggle.classList.contains('active');
+      }
+      playerUpdateSettingsState();
+    });
+  }
+
+  var qualitySelectEl = bar.querySelector('.BiliTube-player-quality-select');
+  if (qualitySelectEl) {
+    qualitySelectEl.addEventListener('change', function () {
+      var video = document.getElementById('BiliTube-video');
+      if (!video) return;
+      var targetQuality = qualitySelectEl.value === 'sd' ? 'sd' : 'hd';
+      var hdSrc = video.getAttribute('data-src-hd') || '';
+      var sdSrc = video.getAttribute('data-src-sd') || hdSrc;
+      var source = video.querySelector('source');
+      if (!source || !hdSrc) return;
+      var nextSrc = targetQuality === 'hd' ? hdSrc : sdSrc;
+      if (!nextSrc) return;
+      var wasPlaying = !video.paused && !video.ended;
+      video.pause();
+      source.src = nextSrc;
+      video.setAttribute('data-quality', targetQuality);
+      try {
+        video.load();
+      } catch (e) {}
+      if (wasPlaying) {
+        var playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function () {});
+        }
+      }
+      var qt = document.getElementById('BiliTube-quality-toggle');
+      if (qt) {
+        var label = qt.querySelector('.BiliTube-control-label');
+        if (label) {
+          label.textContent = targetQuality === 'hd' ? '高清' : '标清';
+        }
+      }
+      playerUpdateSettingsState();
+    });
+  }
+
+  var speedSelectEl = bar.querySelector('.BiliTube-player-speed-select');
+  if (speedSelectEl) {
+    speedSelectEl.addEventListener('change', function () {
+      var video = document.getElementById('BiliTube-video');
+      if (!video) return;
+      var value = parseFloat(speedSelectEl.value);
+      if (!value || value <= 0) {
+        value = 1;
+      }
+      video.playbackRate = value;
+      playerUpdateSettingsState();
+    });
+  }
+
+  playerUpdatePlayButtonState();
+  playerUpdateSettingsState();
+}
+
 var BiliTubeVideoProgress = {
   saveDelay: 5000,
   lastSaveTime: 0,
@@ -580,6 +909,7 @@ function BiliTubeLoadVideoById(id) {
   if (!raw) return;
   var isBvid = /^BV/i.test(raw);
   var key = isBvid ? 'bvid' : 'aid';
+  playerSetupControlBar();
   playerCancelAutoPlayTimer();
   var api =
     'https://api.bilibili.com/x/web-interface/view?' +

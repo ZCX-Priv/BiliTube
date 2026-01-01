@@ -1317,6 +1317,144 @@ body {
   transition: background-color 0.2s, transform 0.2s;
 }
 
+.BiliTube-player-control-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.BiliTube-player-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.BiliTube-player-controls-right {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.BiliTube-player-btn-icon {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -2px;
+}
+
+.BiliTube-player-btn-icon:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--primary-color);
+}
+
+.BiliTube-player-btn-play {
+  font-size: 24px;
+  letter-spacing: normal;
+}
+
+.BiliTube-player-settings-menu {
+  position: absolute;
+  bottom: 120%;
+  right: 0;
+  background: rgba(28, 28, 28, 0.96);
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  z-index: 15;
+}
+
+.BiliTube-player-controls-right.BiliTube-settings-open .BiliTube-player-settings-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.BiliTube-player-menu-item {
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #eee;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.BiliTube-player-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--primary-color);
+}
+
+.BiliTube-player-menu-item-value {
+  color: #aaa;
+  font-size: 12px;
+}
+
+.BiliTube-player-select {
+  min-width: 60px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: none;
+  background-color: transparent;
+  color: #fff;
+  font-size: 12px;
+}
+
+.BiliTube-player-select:focus {
+  outline: 1px solid var(--primary-color);
+}
+
+.BiliTube-player-toggle-switch {
+  width: 32px;
+  height: 18px;
+  background: #555;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.BiliTube-player-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.BiliTube-player-menu-item.active .BiliTube-player-toggle-switch {
+  background: var(--primary-color);
+}
+
+.BiliTube-player-menu-item.active .BiliTube-player-toggle-switch::after {
+  transform: translateX(14px);
+}
+
 .BiliTube-resume-btn:hover {
   background-color: rgba(251, 114, 153, 1);
   transform: translate(-50%, -50%) scale(1.05);
@@ -1457,6 +1595,7 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
+  justify-content: center;
 }
 
 .BiliTube-control-chip {
@@ -1479,6 +1618,40 @@ body {
 
 .BiliTube-chip-icon {
   font-size: 14px;
+}
+
+.BiliTube-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-chip);
+  border: none;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary, #fff);
+  font-size: 13px;
+  transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s, color 0.2s;
+}
+
+.BiliTube-action-btn svg {
+  display: block;
+}
+
+.BiliTube-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-1);
+}
+
+.BiliTube-action-btn:active {
+  transform: scale(0.96);
+}
+
+.BiliTube-action-btn.BiliTube-action-active {
+  background-color: var(--primary-color);
+  color: #fff;
+  box-shadow: var(--shadow-2);
 }
 
 .BiliTube-author-card {

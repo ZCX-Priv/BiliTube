@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const THUMBNAIL_PLACEHOLDER = 'img/thumbnail-placeholder.png';
 const AVATAR_PLACEHOLDER = 'img/avatar-placeholder.png';
+const BILITUBE_DEFAULT_AVATAR = 'img/BiliTube.png';
 
 function initImagePlaceholders() {
   document.body.addEventListener('error', function(e) {
@@ -548,10 +549,16 @@ function BiliTubeLoadProfileHeader(view) {
         if (avatar && typeof homeParseCoverUrl === 'function') {
           avatar = homeParseCoverUrl(avatar);
         }
+        const defaultAvatar =
+          typeof BILITUBE_DEFAULT_AVATAR === 'string'
+            ? BILITUBE_DEFAULT_AVATAR
+            : AVATAR_PLACEHOLDER;
         if (avatar) {
           avatarEl.style.backgroundImage = "url('" + avatar + "')";
+        } else if (defaultAvatar) {
+          avatarEl.style.backgroundImage = "url('" + defaultAvatar + "')";
         } else {
-          avatarEl.style.backgroundImage = "url('img/BiliTube.png')";
+          avatarEl.style.backgroundImage = '';
         }
       }
       if (nameEl) {
@@ -567,7 +574,15 @@ function BiliTubeLoadProfileHeader(view) {
     })
     .catch(() => {
       if (avatarEl) {
-        avatarEl.style.backgroundImage = "url('img/BiliTube.png')";
+        const defaultAvatar =
+          typeof BILITUBE_DEFAULT_AVATAR === 'string'
+            ? BILITUBE_DEFAULT_AVATAR
+            : AVATAR_PLACEHOLDER;
+        if (defaultAvatar) {
+          avatarEl.style.backgroundImage = "url('" + defaultAvatar + "')";
+        } else {
+          avatarEl.style.backgroundImage = '';
+        }
       }
       if (nameEl) {
         nameEl.textContent = 'BiliTube';
@@ -581,6 +596,11 @@ function BiliTubeLoadProfileHeader(view) {
 function initProfileView() {
   const view = document.getElementById('view-profile');
   if (!view) return;
+
+  const avatarEl = view.querySelector('.profile-avatar');
+  if (avatarEl && !avatarEl.style.backgroundImage) {
+    avatarEl.style.backgroundImage = "url('img/BiliTube.png')";
+  }
 
   if (!view.dataset.tabsBound) {
     const tabs = view.querySelectorAll('.tab-btn');

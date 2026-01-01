@@ -772,6 +772,9 @@ body {
   height: 80px;
   border-radius: 50%;
   background-color: var(--divider-color);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   margin-right: 24px;
 }
 
@@ -1419,6 +1422,16 @@ body {
   padding: 12px;
   overflow-y: auto;
   max-height: calc(100vh - var(--header-height) - 80px);
+}
+
+.BiliTube-panel-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.BiliTube-panel-body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .BiliTube-panel-video-controls {

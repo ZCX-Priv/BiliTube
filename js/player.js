@@ -165,6 +165,27 @@ function playerNormalizeUrl(u) {
   return s;
 }
 
+function playerNormalizeTextLinks(text) {
+  if (!text) return '';
+  var s = String(text);
+  if (s.indexOf('/proxy?') === -1 && s.indexOf('/stream?') === -1) {
+    return s;
+  }
+  return s.replace(/(?:\/proxy|\/stream)\?u=([^ \u4e00-\u9fa5]+)/g, function (
+    match,
+    encoded
+  ) {
+    if (!encoded) return match;
+    try {
+      var decoded = decodeURIComponent(encoded);
+      if (!decoded) return match;
+      return decoded;
+    } catch (e) {
+      return match;
+    }
+  });
+}
+
 function playerAttachSource(videoEl, url) {
   if (!videoEl || !url) return;
   var isHls = /\.m3u8(\?|$)/i.test(url);
@@ -527,8 +548,10 @@ function BiliTubeLoadVideoById(id) {
       var data = res.data;
       var cid = data.cid;
       var pages = data.pages || [];
-      var title = data.title || '';
-      var desc = data.desc || '';
+      var rawTitle = data.title || '';
+      var rawDesc = data.desc || '';
+      var title = playerNormalizeTextLinks(rawTitle);
+      var desc = playerNormalizeTextLinks(rawDesc);
       var owner = data.owner || {};
       var poster = data.pic || '';
       var authorName = owner.name || '';
@@ -540,12 +563,17 @@ function BiliTubeLoadVideoById(id) {
       }
       var descEl = document.getElementById('BiliTube-video-desc');
       if (descEl) {
-        var descText = desc || '';
-        if (descText.trim()) {
+        var descText = (desc || '').trim();
+        var shouldHide =
+          !descText ||
+          descText === '-' ||
+          descText === '—' ||
+          descText === '－';
+        if (shouldHide) {
+          descEl.style.display = 'none';
+        } else {
           descEl.textContent = descText;
           descEl.style.display = 'block';
-        } else {
-          descEl.style.display = 'none';
         }
       }
       var nameEl = document.getElementById('BiliTube-author-name');
@@ -557,19 +585,8 @@ function BiliTubeLoadVideoById(id) {
         bioEl.textContent = bio || '';
       }
       var avatarEl = document.getElementById('BiliTube-author-avatar');
-      if (avatarEl) {
-        var displayAvatar = avatar;
-        if (displayAvatar && typeof homeParseCoverUrl === 'function') {
-          displayAvatar = homeParseCoverUrl(displayAvatar);
-        }
-        avatarEl.textContent = '';
-        if (displayAvatar) {
-          avatarEl.style.backgroundImage = "url('" + displayAvatar + "')";
-        } else {
-          avatarEl.style.backgroundImage = '';
-          var initial = authorName ? authorName.charAt(0) : 'A';
-          avatarEl.textContent = initial;
-        }
+      if (avatarEl && typeof playerSetAvatarBackground === 'function') {
+        playerSetAvatarBackground(avatarEl, avatar);
       }
       var videoEl = document.getElementById('BiliTube-video');
       if (videoEl) {
@@ -788,6 +805,60 @@ function playerLoadDanmaku(cid) {
     .catch(function () {});
 }
 
+function playerSetAvatarBackground(el, url) {
+  if (!el) {
+    return;
+  }
+  el.textContent = '';
+  if (url) {
+    var finalUrl = url;
+    if (typeof homeParseCoverUrl === 'function') {
+      finalUrl = homeParseCoverUrl(finalUrl);
+    }
+    el.style.backgroundImage = "url('" + finalUrl + "')";
+  } else {
+    var placeholder =
+      typeof AVATAR_PLACEHOLDER === 'string' ? AVATAR_PLACEHOLDER : '';
+    if (placeholder) {
+      el.style.backgroundImage = "url('" + placeholder + "')";
+    } else {
+      el.style.backgroundImage = '';
+    }
+  }
+}
+
+function playerSetThumbBackground(el, url) {
+  if (!el) {
+    return;
+  }
+  var placeholder =
+    typeof THUMBNAIL_PLACEHOLDER === 'string'
+      ? THUMBNAIL_PLACEHOLDER
+      : '';
+  if (placeholder) {
+    el.style.backgroundImage = "url('" + placeholder + "')";
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+  } else {
+    el.style.backgroundImage = '';
+  }
+  if (!url) {
+    return;
+  }
+  var finalUrl = url;
+  if (typeof homeParseCoverUrl === 'function') {
+    finalUrl = homeParseCoverUrl(finalUrl);
+  }
+  var img = new Image();
+  img.onload = function () {
+    el.style.backgroundImage = "url('" + finalUrl + "')";
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+  };
+  img.onerror = function () {};
+  img.src = finalUrl;
+}
+
 function playerAppendSubReply(box, sub) {
   if (!box || !sub) {
     return;
@@ -799,14 +870,8 @@ function playerAppendSubReply(box, sub) {
   var subName = (sub.member && sub.member.uname) || '';
   var subFace =
     (sub.member && (sub.member.avatar || sub.member.face)) || '';
-  if (subFace) {
-    var subFaceUrl = subFace;
-    if (typeof homeParseCoverUrl === 'function') {
-      subFaceUrl = homeParseCoverUrl(subFaceUrl);
-    }
-    subAvatar.style.backgroundImage = "url('" + subFaceUrl + "')";
-  } else {
-    subAvatar.textContent = subName ? subName.charAt(0) : 'U';
+  if (typeof playerSetAvatarBackground === 'function') {
+    playerSetAvatarBackground(subAvatar, subFace);
   }
   var subContent = document.createElement('div');
   subContent.className = 'BiliTube-comment-content';
@@ -815,8 +880,9 @@ function playerAppendSubReply(box, sub) {
   subUser.textContent = subName || '用户';
   var subText = document.createElement('div');
   subText.className = 'BiliTube-comment-text';
-  subText.textContent =
+  var rawSubMessage =
     (sub.content && sub.content.message) || '';
+  subText.textContent = playerNormalizeTextLinks(rawSubMessage);
   subContent.appendChild(subUser);
   subContent.appendChild(subText);
   subItem.appendChild(subAvatar);
@@ -884,14 +950,8 @@ function playerLoadMoreComments(isFirstPage) {
       var uname = (reply.member && reply.member.uname) || '';
       var face =
         (reply.member && (reply.member.avatar || reply.member.face)) || '';
-      if (face) {
-        var faceUrl = face;
-        if (typeof homeParseCoverUrl === 'function') {
-          faceUrl = homeParseCoverUrl(faceUrl);
-        }
-        avatar.style.backgroundImage = "url('" + faceUrl + "')";
-      } else {
-        avatar.textContent = uname ? uname.charAt(0) : 'U';
+      if (typeof playerSetAvatarBackground === 'function') {
+        playerSetAvatarBackground(avatar, face);
       }
       var content = document.createElement('div');
       content.className = 'BiliTube-comment-content';
@@ -900,8 +960,9 @@ function playerLoadMoreComments(isFirstPage) {
       userEl.textContent = uname || '用户';
       var textEl = document.createElement('div');
       textEl.className = 'BiliTube-comment-text';
-      textEl.textContent =
+      var rawMessage =
         (reply.content && reply.content.message) || '';
+      textEl.textContent = playerNormalizeTextLinks(rawMessage);
       var meta = document.createElement('div');
       meta.className = 'BiliTube-rec-meta';
       var likes = reply.like || 0;
@@ -1018,14 +1079,8 @@ function playerLoadRecommendations(bvid, aid) {
         var thumb = document.createElement('div');
         thumb.className = 'BiliTube-rec-thumb';
         var pic = item.pic || item.cover || '';
-        if (pic) {
-          var coverUrl = pic;
-          if (typeof homeParseCoverUrl === 'function') {
-            coverUrl = homeParseCoverUrl(coverUrl);
-          }
-          thumb.style.backgroundImage = "url('" + coverUrl + "')";
-          thumb.style.backgroundSize = 'cover';
-          thumb.style.backgroundPosition = 'center';
+        if (typeof playerSetThumbBackground === 'function') {
+          playerSetThumbBackground(thumb, pic);
         }
         var info = document.createElement('div');
         info.className = 'BiliTube-rec-info';

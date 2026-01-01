@@ -104,7 +104,9 @@ var BiliTubeVideoChecker = {
     if (window.BiliTubeHls) {
       try {
         window.BiliTubeHls.destroy();
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error destroying Hls instance:', e);
+      }
       window.BiliTubeHls = null;
     }
     var source = videoEl.querySelector('source');
@@ -166,32 +168,29 @@ function playerNormalizeUrl(u) {
 function playerAttachSource(videoEl, url) {
   if (!videoEl || !url) return;
   var isHls = /\.m3u8(\?|$)/i.test(url);
-  if (isHls && window.Hls && typeof window.Hls.isSupported === 'function' && window.Hls.isSupported()) {
+  if (isHls && videoEl.canPlayType('application/vnd.apple.mpegurl')) {
     if (window.BiliTubeHls) {
       try {
         window.BiliTubeHls.destroy();
       } catch (e) {}
       window.BiliTubeHls = null;
     }
-    var hlsConfig = {
-      enableWorker: true,
-      lowLatencyMode: true,
-      xhrSetup: function(xhr, url) {
-        xhr.timeout = 15000;
-      },
-      maxBufferLength: 30,
-      maxMaxBufferLength: 60,
-      maxBufferSize: 60 * 1024 * 1024,
-      maxBufferHole: 0.5
-    };
-    var hls = new window.Hls(hlsConfig);
-    window.BiliTubeHls = hls;
-    hls.loadSource(url);
-    hls.attachMedia(videoEl);
-    hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
-      videoEl.currentTime = 0;
-      BiliTubeVideoChecker.stopStallTimer();
-    });
+    var source = videoEl.querySelector('source');
+    if (!source) {
+      source = document.createElement('source');
+      while (videoEl.firstChild) {
+        videoEl.removeChild(videoEl.firstChild);
+      }
+      videoEl.appendChild(source);
+    }
+    source.src = url;
+    source.type = 'application/vnd.apple.mpegurl';
+    videoEl.removeAttribute('data-src-hd');
+    videoEl.removeAttribute('data-src-sd');
+    videoEl.preload = 'auto';
+    try {
+      videoEl.load();
+    } catch (e) {}
   } else {
     if (window.BiliTubeHls) {
       try {
@@ -208,6 +207,7 @@ function playerAttachSource(videoEl, url) {
       videoEl.appendChild(source);
     }
     source.src = url;
+    source.removeAttribute('type');
     videoEl.setAttribute('data-src-hd', url);
     videoEl.setAttribute('data-src-sd', url);
     videoEl.preload = 'auto';

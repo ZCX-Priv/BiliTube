@@ -57,12 +57,35 @@ body {
   height: 100vh;
   pointer-events: none;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   clip-path: circle(0 at var(--theme-origin-x, 50%) var(--theme-origin-y, 50%));
   transition: clip-path 0.6s ease-out;
 }
 
 .theme-transition-overlay.active {
   clip-path: circle(150% at var(--theme-origin-x, 50%) var(--theme-origin-y, 50%));
+}
+
+.theme-transition-content {
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.theme-transition-overlay.active .theme-transition-content {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.theme-transition-icon {
+  margin-bottom: 12px;
+}
+
+.theme-transition-text {
+  font-size: 16px;
 }
 
 /* Loading Screen */

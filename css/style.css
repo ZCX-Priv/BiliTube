@@ -163,24 +163,33 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
-  margin-right: 16px;
+  padding: 0;
+  margin-right: 8px;
   color: var(--text-primary);
-  border-radius: var(--radius-btn);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.menu-btn:hover { background-color: var(--hover-color); }
+.menu-btn:hover { 
+  background-color: var(--hover-color);
+}
 
 .brand-logo { 
   display: flex;
   align-items: center;
   text-decoration: none;
+  height: 100%;
 }
-.brand-logo .bili { color: var(--primary-color); }
-.brand-logo .tube { color: var(--secondary-color); }
+
 .brand-img {
   height: 60px;
   width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .header-center {
@@ -192,17 +201,18 @@ body {
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: var(--hover-color);
-  border-radius: var(--radius-btn);
-  padding: 0 16px;
-  height: 40px;
+  background-color: #e6e8ed;
+  border-radius: 24px;
+  padding: 0 18px;
+  height: 48px;
   border: 1px solid transparent;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .search-bar:focus-within {
   background-color: var(--surface-color);
-  border-color: var(--divider-color);
-  box-shadow: var(--shadow-1);
+  border-color: rgba(33, 150, 243, 0.6);
+  box-shadow: var(--shadow-2);
 }
 
 .search-input {
@@ -215,23 +225,63 @@ body {
   outline: none;
 }
 
+.search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
 .search-btn {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.search-btn:hover {
+  background-color: var(--hover-color);
+  color: var(--text-primary);
 }
 
 .search-suggestions {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background-color: var(--surface-color);
-  box-shadow: var(--shadow-2);
-  border-radius: 0 0 4px 4px;
+  padding: 0;
   display: none;
   z-index: 101;
+}
+
+.search-suggestions-panel {
+  background-color: var(--surface-color);
+  border-radius: 24px;
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-suggestions-content {
+  padding: 12px 0 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.search-suggestions-content {
+  scrollbar-width: none;
+}
+
+.search-suggestions-content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .suggestion-section-header {
@@ -241,7 +291,6 @@ body {
   padding: 8px 16px;
   font-size: 13px;
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--divider-color);
 }
 
 .clear-history-btn {
@@ -256,6 +305,90 @@ body {
 
 .clear-history-btn:hover {
   background-color: var(--hover-color);
+}
+
+.search-history-list {
+  padding: 0 24px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.search-history-tag {
+  background-color: #f2f2f2;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-history-tag:hover {
+  background-color: #e0e0e0;
+}
+
+.search-hot-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-hot-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-hot-item:hover {
+  background-color: var(--hover-color);
+}
+
+.search-hot-rank {
+  width: 24px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #999;
+  margin-right: 16px;
+  text-align: center;
+}
+
+.search-hot-item:nth-child(-n + 3) .search-hot-rank {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.search-hot-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-hot-badge {
+  margin-left: 8px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.search-badge-red {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.search-badge-pink {
+  background-color: #ff80ab;
+  color: #fff;
 }
 
 .suggestion-item {
@@ -1885,7 +2018,7 @@ body {
 }
 
 /* 响应式设计 */
-@media (max-width: 600px) {
+@media (max-width: 969px) {
   .header-center {
     max-width: none;
   }

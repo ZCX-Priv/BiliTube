@@ -579,6 +579,17 @@ function handleRouteChange() {
   }
 
   if (previousViewId === 'view-video' && viewId !== 'view-video') {
+    if (typeof BiliTubeVideoProgress !== 'undefined') {
+      var videoEl = document.getElementById('BiliTube-video');
+      var vid = BiliTubeVideoProgress.currentVideoId;
+      if (videoEl && vid) {
+        var ct = videoEl.currentTime;
+        var dur = videoEl.duration;
+        if (typeof ct === 'number' && ct >= 0) {
+          BiliTubeVideoProgress.save(vid, ct, dur);
+        }
+      }
+    }
     const targetScroll =
       lastNonVideoScrollY ||
       window.scrollY ||

@@ -1171,18 +1171,30 @@ function BiliTubeLoadVideoById(id) {
           metaEl.style.display = 'none';
         }
       }
-      if (typeof BiliTubeRecordWatchHistory === 'function') {
-        var historyId = bvid || (aid ? String(aid) : '');
-        if (historyId) {
-          BiliTubeRecordWatchHistory({
-            id: historyId,
-            title: title,
-            cover: poster,
-            channel: authorName,
-            views: viewsNum,
-            duration: durationSeconds,
-            ts: Date.now()
-          });
+      var historyId = bvid || (aid ? String(aid) : '');
+      if (historyId) {
+        var entry = {
+          id: historyId,
+          title: title,
+          cover: poster,
+          channel: authorName,
+          avatar: avatar,
+          time: dateText,
+          views: viewsNum,
+          duration: durationSeconds,
+          ts: Date.now()
+        };
+        if (typeof BiliTubeRecordWatchHistory === 'function') {
+          BiliTubeRecordWatchHistory(entry);
+        }
+        if (typeof BiliTubeSetupFavoriteButton === 'function') {
+          BiliTubeSetupFavoriteButton(entry);
+        }
+        if (typeof BiliTubeSetupLoveButton === 'function') {
+          BiliTubeSetupLoveButton(historyId);
+        }
+        if (typeof BiliTubeSetupCoinButton === 'function') {
+          BiliTubeSetupCoinButton(historyId);
         }
       }
       playerRenderEpisodes(pages, cid, bvid, aid, videoEl);

@@ -7,6 +7,7 @@ function BiliTubeInitModal() {
   if (!modal) return;
   const cancelBtn = modal.querySelector('[data-action="modal-cancel"]');
   const confirmBtn = modal.querySelector('[data-action="modal-confirm"]');
+  const closeBtn = modal.querySelector('[data-action="modal-close"]');
   const close = (ok) => {
     modal.hidden = true;
     if (BiliTubeModalState.resolve) {
@@ -14,6 +15,7 @@ function BiliTubeInitModal() {
       BiliTubeModalState.resolve = null;
     }
   };
+  BiliTubeModalState.close = close;
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
       close(false);
@@ -22,6 +24,11 @@ function BiliTubeInitModal() {
   if (confirmBtn) {
     confirmBtn.addEventListener('click', () => {
       close(true);
+    });
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      close(false);
     });
   }
   modal.addEventListener('click', (e) => {
@@ -50,4 +57,3 @@ function BiliTubeConfirm(message) {
     BiliTubeModalState.resolve = resolve;
   });
 }
-

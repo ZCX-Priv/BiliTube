@@ -1019,10 +1019,30 @@ body {
   z-index: 1;
 }
 
+.BiliTube-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .BiliTube-modal-title {
   font-size: 16px;
   font-weight: 500;
-  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.BiliTube-modal-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+
+.BiliTube-modal-close:hover {
   color: var(--text-primary);
 }
 
@@ -1652,6 +1672,28 @@ body {
   background-color: var(--primary-color);
   color: #fff;
   box-shadow: var(--shadow-2);
+}
+
+.BiliTube-coin-burst {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 2000;
+}
+
+.BiliTube-coin-burst-item {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0, #ffd54f 30%, #fbc02d 60%, #f57f17 100%);
+  box-shadow: 0 0 8px rgba(255, 215, 64, 0.8);
+  opacity: 0;
+  transform: translate(0, 0) scale(0.6);
+  transition: transform 0.6s ease-out, opacity 0.6s ease-out;
 }
 
 .BiliTube-author-card {

@@ -221,7 +221,7 @@ function t(key) {
 }
 
 const STORAGE_DB_NAME = 'BiliTube-app';
-const STORAGE_DB_VERSION = 3;
+const STORAGE_DB_VERSION = 6;
 const STORAGE_STORE_NAME = 'kv';
 
 const storageState = {
@@ -253,6 +253,27 @@ function openStorageDb() {
       const store = db.createObjectStore('watch_history', { keyPath: 'key', autoIncrement: true });
       if (!store.indexNames.contains('ts')) {
         store.createIndex('ts', 'ts', { unique: false });
+      }
+      if (db.objectStoreNames.contains('favorites')) {
+        db.deleteObjectStore('favorites');
+      }
+      const favoritesStore = db.createObjectStore('favorites', { keyPath: 'key', autoIncrement: true });
+      if (!favoritesStore.indexNames.contains('ts')) {
+        favoritesStore.createIndex('ts', 'ts', { unique: false });
+      }
+      if (db.objectStoreNames.contains('likes')) {
+        db.deleteObjectStore('likes');
+      }
+      const likesStore = db.createObjectStore('likes', { keyPath: 'key', autoIncrement: true });
+      if (!likesStore.indexNames.contains('ts')) {
+        likesStore.createIndex('ts', 'ts', { unique: false });
+      }
+      if (db.objectStoreNames.contains('coins')) {
+        db.deleteObjectStore('coins');
+      }
+      const coinsStore = db.createObjectStore('coins', { keyPath: 'key', autoIncrement: true });
+      if (!coinsStore.indexNames.contains('ts')) {
+        coinsStore.createIndex('ts', 'ts', { unique: false });
       }
     };
     request.onsuccess = function () {
@@ -715,6 +736,12 @@ function initProfileView() {
   if (typeof BiliTubeRenderProfileHistory === 'function') {
     BiliTubeRenderProfileHistory(view);
   }
+  if (typeof BiliTubeBindProfileFavorites === 'function') {
+    BiliTubeBindProfileFavorites(view);
+  }
+  if (typeof BiliTubeRenderProfileFavorites === 'function') {
+    BiliTubeRenderProfileFavorites(view);
+  }
 }
 
 function initVideoView(id) {
@@ -839,11 +866,111 @@ function bindVideoView(view) {
   if (actionButtons && actionButtons.length) {
     actionButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        const alreadyActive = btn.classList.contains('BiliTube-action-active');
-        if (!alreadyActive) {
-          btn.classList.add('BiliTube-action-active');
+        const action = btn.dataset.action || '';
+        if (action === 'favorite') {
+          let videoId = btn.getAttribute('data-video-id') || '';
+          if (!videoId) {
+            const hash = window.location.hash || '';
+            const match = hash.match(/#\/video\/([^/?#]+)/);
+            if (match && match[1]) {
+              videoId = decodeURIComponent(match[1]);
+            }
+          }
+          if (!videoId && typeof BiliTubeVideoProgress !== 'undefined') {
+            const vid = BiliTubeVideoProgress.currentVideoId;
+            if (vid) {
+              videoId = vid;
+            }
+          }
+          if (!videoId) {
+            const fallbackActive = btn.classList.contains('BiliTube-action-active');
+            btn.classList.toggle('BiliTube-action-active', !fallbackActive);
+            return;
+          }
+          const entry = {
+            id: videoId,
+            title: btn.getAttribute('data-video-title') || '',
+            cover: btn.getAttribute('data-video-cover') || '',
+            channel: btn.getAttribute('data-video-channel') || '',
+            avatar: btn.getAttribute('data-video-avatar') || '',
+            time: btn.getAttribute('data-video-time') || '',
+            views: 0,
+            duration: 0,
+            ts: Date.now()
+          };
+          const rawViews = btn.getAttribute('data-video-views');
+          if (rawViews != null && rawViews !== '') {
+            const numViews = Number(rawViews);
+            if (!isNaN(numViews) && numViews > 0) {
+              entry.views = numViews;
+            }
+          }
+          const rawDuration = btn.getAttribute('data-video-duration');
+          if (rawDuration != null && rawDuration !== '') {
+            const numDur = Number(rawDuration);
+            if (!isNaN(numDur) && numDur > 0) {
+              entry.duration = numDur;
+            }
+          }
+          const shouldFavorite = !btn.classList.contains('BiliTube-action-active');
+          btn.classList.toggle('BiliTube-action-active', shouldFavorite);
+          if (typeof BiliTubeToggleFavorite === 'function') {
+            BiliTubeToggleFavorite(entry, shouldFavorite);
+          } else if (typeof BiliTubeRecordFavorite === 'function' && shouldFavorite) {
+            BiliTubeRecordFavorite(entry);
+          } else if (!shouldFavorite && typeof BiliTubeRemoveFavoriteById === 'function') {
+            BiliTubeRemoveFavoriteById(videoId);
+          }
+        } else if (action === 'like') {
+          let videoId = btn.getAttribute('data-video-id') || '';
+          if (!videoId) {
+            const hash = window.location.hash || '';
+            const match = hash.match(/#\/video\/([^/?#]+)/);
+            if (match && match[1]) {
+              videoId = decodeURIComponent(match[1]);
+            }
+          }
+          if (!videoId && typeof BiliTubeVideoProgress !== 'undefined') {
+            const vid = BiliTubeVideoProgress.currentVideoId;
+            if (vid) {
+              videoId = vid;
+            }
+          }
+          if (!videoId) {
+            const fallbackActive = btn.classList.contains('BiliTube-action-active');
+            btn.classList.toggle('BiliTube-action-active', !fallbackActive);
+            return;
+          }
+          const shouldLike = !btn.classList.contains('BiliTube-action-active');
+          btn.classList.toggle('BiliTube-action-active', shouldLike);
+          if (typeof BiliTubeSetLove === 'function') {
+            BiliTubeSetLove(videoId, shouldLike);
+          }
+        } else if (action === 'coin') {
+          if (typeof BiliTubeShowCoinModal === 'function') {
+            let videoId = btn.getAttribute('data-video-id') || '';
+            if (!videoId) {
+              const hash = window.location.hash || '';
+              const match = hash.match(/#\/video\/([^/?#]+)/);
+              if (match && match[1]) {
+                videoId = decodeURIComponent(match[1]);
+              }
+            }
+            if (!videoId && typeof BiliTubeVideoProgress !== 'undefined') {
+              const vid = BiliTubeVideoProgress.currentVideoId;
+              if (vid) {
+                videoId = vid;
+              }
+            }
+            BiliTubeShowCoinModal(videoId || '', btn);
+          }
         } else {
-          btn.classList.remove('BiliTube-action-active');
+          const alreadyActive = btn.classList.contains('BiliTube-action-active');
+          if (!alreadyActive) {
+            btn.classList.add('BiliTube-action-active');
+          } else {
+            btn.classList.remove('BiliTube-action-active');
+          }
         }
       });
     });

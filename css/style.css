@@ -512,6 +512,24 @@ body {
   margin-left: var(--sidebar-width);
   padding: 24px;
   transition: margin-left 0.3s;
+  position: relative;
+}
+
+.main-empty-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.main-empty-placeholder.visible {
+  display: flex;
 }
 
 .view-title-row {

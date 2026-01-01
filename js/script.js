@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTags();
     initRouter();
     initImagePlaceholders();
+    initMainEmptyWatcher();
   });
 });
 
@@ -67,6 +68,81 @@ function initImagePlaceholders() {
 
 function getPlaceholderImage(isAvatar) {
   return isAvatar ? AVATAR_PLACEHOLDER : THUMBNAIL_PLACEHOLDER;
+}
+
+function updateMainEmptyPlaceholder() {
+  var main = document.querySelector('main.main-content');
+  if (!main) return;
+  var placeholder = document.getElementById('main-empty-placeholder');
+  if (!placeholder) {
+    placeholder = document.createElement('div');
+    placeholder.id = 'main-empty-placeholder';
+    placeholder.className = 'main-empty-placeholder';
+    placeholder.textContent = '暂无内容';
+    main.appendChild(placeholder);
+  }
+  var activeView = main.querySelector('.view.active:not([hidden])');
+  var hasContent = false;
+  if (activeView) {
+    if (activeView.id === 'view-home') {
+      var homeGrid = activeView.querySelector('#video-grid');
+      if (homeGrid && homeGrid.querySelector('.video-card')) {
+        hasContent = true;
+      }
+    } else if (activeView.id === 'view-subscriptions') {
+      var subsContent = activeView.querySelector('.subs-content');
+      if (subsContent && subsContent.querySelector('.feed-card')) {
+        hasContent = true;
+      }
+    } else if (activeView.id === 'view-profile') {
+      var profileHeader = activeView.querySelector('.profile-header');
+      if (profileHeader) {
+        hasContent = true;
+      }
+    } else if (activeView.id === 'view-video') {
+      var videoContainer = activeView.querySelector('.video-page-container');
+      if (videoContainer && videoContainer.children.length) {
+        hasContent = true;
+      }
+    } else if (activeView.id === 'view-search') {
+      var videoGrid = document.getElementById('search-video-grid');
+      var userList = document.getElementById('search-user-list');
+      var hasVideoCard = videoGrid && videoGrid.querySelector('.video-card');
+      var hasUserCard = userList && userList.querySelector('.user-card');
+      if (hasVideoCard || hasUserCard) {
+        hasContent = true;
+      }
+    } else {
+      var meaningful = activeView.querySelector('.video-card, .feed-card, .user-card');
+      if (meaningful) {
+        hasContent = true;
+      }
+    }
+  }
+  var showPlaceholder = !hasContent;
+  placeholder.classList.toggle('visible', showPlaceholder);
+  if (activeView) {
+    if (showPlaceholder) {
+      activeView.style.visibility = 'hidden';
+    } else {
+      activeView.style.visibility = '';
+    }
+  }
+}
+
+function initMainEmptyWatcher() {
+  var main = document.querySelector('main.main-content');
+  if (!main || window.__BiliTubeMainEmptyBound) return;
+  window.__BiliTubeMainEmptyBound = true;
+  if (typeof MutationObserver === 'undefined') {
+    updateMainEmptyPlaceholder();
+    return;
+  }
+  var observer = new MutationObserver(function() {
+    updateMainEmptyPlaceholder();
+  });
+  observer.observe(main, { childList: true, subtree: true });
+  updateMainEmptyPlaceholder();
 }
 
 const BiliTubeDataCache = {
@@ -514,6 +590,7 @@ function handleRouteChange() {
       }, 0);
     }
   }
+  updateMainEmptyPlaceholder();
 }
 
 function BiliTubeOpenVideo(hash) {

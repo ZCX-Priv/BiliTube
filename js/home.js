@@ -32,6 +32,23 @@ function homeFormatDuration(totalSeconds) {
   return pad(h) + ':' + pad(m) + ':' + pad(sec);
 }
 
+function homeFormatPubDate(timestamp) {
+  if (!timestamp) return '';
+  let t = Number(timestamp) || 0;
+  if (!t) return '';
+  if (t < 1000000000000) {
+    t = t * 1000;
+  }
+  const d = new Date(t);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return '发布于 ' + y + '-' + m + '-' + day + ' ' + hh + ':' + mm;
+}
+
 function homeParseCoverUrl(pic) {
   if (!pic) return '';
   if (pic.startsWith('/proxy?') || pic.startsWith('/stream?')) return pic;
@@ -62,6 +79,11 @@ function mapHomeRcmdItem(item) {
   } else if (stat.play != null) {
     views = stat.play + ' 次观看';
   }
+  const pub = item.pubdate || item.ctime || 0;
+  let time = '';
+  if (pub && typeof homeFormatPubDate === 'function') {
+    time = homeFormatPubDate(pub);
+  }
   const id = item.bvid || item.id || item.aid || '';
   return {
     id,
@@ -70,7 +92,7 @@ function mapHomeRcmdItem(item) {
     title,
     channel: name,
     views,
-    time: '',
+    time,
     avatar
   };
 }
@@ -88,6 +110,11 @@ function mapHomePopularItem(item) {
   } else if (stat.play != null) {
     views = stat.play + ' 次观看';
   }
+  const pub = item.pubdate || item.ctime || 0;
+  let time = '';
+  if (pub && typeof homeFormatPubDate === 'function') {
+    time = homeFormatPubDate(pub);
+  }
   const id = item.bvid || item.aid || '';
   return {
     id,
@@ -96,7 +123,7 @@ function mapHomePopularItem(item) {
     title,
     channel: name,
     views,
-    time: '',
+    time,
     avatar
   };
 }

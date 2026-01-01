@@ -58,6 +58,11 @@ function mapSearchVideoItem(item) {
   var views = item.play || item.play_num || '';
   var bvid = item.bvid || '';
   var avatar = item.upic || '';
+   var pub = item.pubdate || 0;
+  var time = '';
+  if (pub && typeof homeFormatPubDate === 'function') {
+    time = homeFormatPubDate(pub);
+  }
   var mapped = {
     id: bvid,
     cover: cover,
@@ -65,7 +70,7 @@ function mapSearchVideoItem(item) {
     title: title,
     channel: author,
     views: views ? views + ' 次观看' : '',
-    time: '',
+    time: time,
     avatar: avatar
   };
   return mapped;
@@ -186,7 +191,11 @@ function searchLoadMoreVideos() {
           var cover = v.cover || '';
           var channelName = v.channel || '';
           var viewsText = v.views || '';
-          var meta = viewsText;
+          var timeText = v.time || '';
+          var metaParts = [];
+          if (viewsText) metaParts.push(viewsText);
+          if (timeText) metaParts.push(timeText);
+          var meta = metaParts.join(' · ');
       var duration = v.duration || '';
       return (
         '<div class="video-card" onclick="BiliTubeOpenVideo(\'#/video/' +

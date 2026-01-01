@@ -1713,6 +1713,12 @@ body {
   overflow-wrap: break-word;
 }
 
+.BiliTube-video-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
 .BiliTube-video-desc {
   font-size: 14px;
   line-height: 1.6;

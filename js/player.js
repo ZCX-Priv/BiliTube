@@ -1077,6 +1077,28 @@ function BiliTubeLoadVideoById(id) {
       var stat = data.stat || {};
       var viewsNum = stat.view || stat.play || 0;
       var durationSeconds = data.duration || 0;
+      var pub = data.pubdate || data.ctime || 0;
+      var dateText = '';
+      if (pub && typeof homeFormatPubDate === 'function') {
+        dateText = homeFormatPubDate(pub);
+      }
+      var metaEl = document.getElementById('BiliTube-video-meta');
+      if (metaEl) {
+        var viewsText = '';
+        if (viewsNum) {
+          viewsText = viewsNum.toLocaleString() + ' 次观看';
+        }
+        var metaParts = [];
+        if (viewsText) metaParts.push(viewsText);
+        if (dateText) metaParts.push(dateText);
+        if (metaParts.length) {
+          metaEl.textContent = metaParts.join(' · ');
+          metaEl.style.display = 'block';
+        } else {
+          metaEl.textContent = '';
+          metaEl.style.display = 'none';
+        }
+      }
       if (typeof BiliTubeRecordWatchHistory === 'function') {
         var historyId = bvid || (aid ? String(aid) : '');
         if (historyId) {

@@ -17,7 +17,23 @@ function BiliTubeRecordWatchHistory(entry) {
       duration: typeof entry.duration === 'number' ? entry.duration : 0,
       ts: typeof entry.ts === 'number' ? entry.ts : now
     };
-    store.add(data);
+    let hasAny = false;
+    const request = store.openCursor();
+    request.onsuccess = function () {
+      const cursor = request.result;
+      if (!cursor) {
+        store.add(data);
+        return;
+      }
+      const value = cursor.value || {};
+      if (value.id === data.id) {
+        hasAny = true;
+        cursor.delete();
+        cursor.continue();
+        return;
+      }
+      cursor.continue();
+    };
   });
 }
 

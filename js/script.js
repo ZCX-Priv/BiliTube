@@ -754,7 +754,7 @@ function bindVideoView(view) {
     comments.style.display = 'none';
   }
 
-   if (panelBody && comments && tabs.length) {
+  if (panelBody && comments && tabs.length) {
     panelBody.addEventListener('scroll', () => {
       var activeTab = null;
       tabs.forEach(t => {
@@ -762,13 +762,19 @@ function bindVideoView(view) {
           activeTab = t;
         }
       });
-      if (!activeTab || activeTab.dataset.tab !== 'comments') {
+      if (!activeTab) {
         return;
       }
       const distance =
         panelBody.scrollHeight - panelBody.scrollTop - panelBody.clientHeight;
-      if (distance <= 80 && typeof playerLoadMoreComments === 'function') {
-        playerLoadMoreComments(false);
+      if (activeTab.dataset.tab === 'comments') {
+        if (distance <= 80 && typeof playerLoadMoreComments === 'function') {
+          playerLoadMoreComments(false);
+        }
+      } else if (activeTab.dataset.tab === 'details') {
+        if (distance <= 80 && typeof playerMaybeLoadMoreRecommendations === 'function') {
+          playerMaybeLoadMoreRecommendations();
+        }
       }
     });
   }

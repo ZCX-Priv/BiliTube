@@ -130,6 +130,15 @@ var BiliTubeAutoPlayState = {
   nextId: ''
 };
 
+var BiliTubeRecommendState = {
+  list: [],
+  index: 0,
+  pageSize: 10,
+  container: null,
+  finished: false,
+  loading: false
+};
+
 function playerCancelAutoPlayTimer() {
   if (BiliTubeAutoPlayState.timer) {
     clearTimeout(BiliTubeAutoPlayState.timer);
@@ -172,6 +181,84 @@ function playerHandleAutoPlayEnded() {
     window.location.hash =
       '#/video/' + encodeURIComponent(BiliTubeAutoPlayState.nextId);
   }, 3000);
+}
+
+function playerAppendNextRecommendationsPage() {
+  if (!BiliTubeRecommendState || !BiliTubeRecommendState.container) {
+    return;
+  }
+  if (BiliTubeRecommendState.loading || BiliTubeRecommendState.finished) {
+    return;
+  }
+  var list = BiliTubeRecommendState.list || [];
+  if (!list.length) {
+    BiliTubeRecommendState.finished = true;
+    return;
+  }
+  var start = BiliTubeRecommendState.index || 0;
+  if (start >= list.length) {
+    BiliTubeRecommendState.finished = true;
+    return;
+  }
+  BiliTubeRecommendState.loading = true;
+  var pageSize = BiliTubeRecommendState.pageSize || 10;
+  var end = start + pageSize;
+  if (end > list.length) {
+    end = list.length;
+  }
+  var container = BiliTubeRecommendState.container;
+  for (var i = start; i < end; i++) {
+    var item = list[i] || {};
+    var rec = document.createElement('div');
+    rec.className = 'BiliTube-rec-item';
+    var thumb = document.createElement('div');
+    thumb.className = 'BiliTube-rec-thumb';
+    var pic = item.pic || item.cover || '';
+    if (typeof playerSetThumbBackground === 'function') {
+      playerSetThumbBackground(thumb, pic);
+    }
+    var info = document.createElement('div');
+    info.className = 'BiliTube-rec-info';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'BiliTube-rec-title';
+    titleEl.textContent = item.title || '';
+    var meta = document.createElement('div');
+    meta.className = 'BiliTube-rec-meta';
+    var stat = item.stat || {};
+    var views = stat.view || stat.play || 0;
+    var viewText = views ? views.toLocaleString() + ' 次观看' : '';
+    meta.textContent = viewText;
+    info.appendChild(titleEl);
+    if (viewText) {
+      info.appendChild(meta);
+    }
+    rec.appendChild(thumb);
+    rec.appendChild(info);
+    var nextId = item.bvid || (item.aid ? String(item.aid) : '');
+    if (nextId) {
+      rec.addEventListener('click', function (id) {
+        return function () {
+          window.location.hash = '#/video/' + encodeURIComponent(id);
+        };
+      }(nextId));
+    }
+    container.appendChild(rec);
+  }
+  BiliTubeRecommendState.index = end;
+  if (end >= list.length) {
+    BiliTubeRecommendState.finished = true;
+  }
+  BiliTubeRecommendState.loading = false;
+}
+
+function playerMaybeLoadMoreRecommendations() {
+  if (!BiliTubeRecommendState || !BiliTubeRecommendState.container) {
+    return;
+  }
+  if (BiliTubeRecommendState.finished) {
+    return;
+  }
+  playerAppendNextRecommendationsPage();
 }
 
 function playerProxyUrl(u) {
@@ -1438,6 +1525,12 @@ function playerLoadRecommendations(bvid, aid) {
   if (!container || (!bvid && !aid)) {
     return;
   }
+  BiliTubeRecommendState.list = [];
+  BiliTubeRecommendState.index = 0;
+  BiliTubeRecommendState.pageSize = 10;
+  BiliTubeRecommendState.container = container;
+  BiliTubeRecommendState.finished = false;
+  BiliTubeRecommendState.loading = false;
   container.innerHTML = '';
   var header = document.createElement('div');
   header.className = 'BiliTube-rec-header';
@@ -1480,54 +1573,25 @@ function playerLoadRecommendations(bvid, aid) {
         throw new Error('related_api');
       }
       var list = res.data || [];
-       BiliTubeAutoPlayState.nextId = '';
-       if (!list || !list.length) {
-         return;
-       }
-       var first = list[0] || {};
-       var firstId = first.bvid || (first.aid ? String(first.aid) : '');
-       if (firstId) {
-         BiliTubeAutoPlayState.nextId = firstId;
-       }
-      list.slice(0, 10).forEach(function (item) {
-        var rec = document.createElement('div');
-        rec.className = 'BiliTube-rec-item';
-        var thumb = document.createElement('div');
-        thumb.className = 'BiliTube-rec-thumb';
-        var pic = item.pic || item.cover || '';
-        if (typeof playerSetThumbBackground === 'function') {
-          playerSetThumbBackground(thumb, pic);
-        }
-        var info = document.createElement('div');
-        info.className = 'BiliTube-rec-info';
-        var titleEl = document.createElement('div');
-        titleEl.className = 'BiliTube-rec-title';
-        titleEl.textContent = item.title || '';
-        var meta = document.createElement('div');
-        meta.className = 'BiliTube-rec-meta';
-        var stat = item.stat || {};
-        var views = stat.view || stat.play || 0;
-        var viewText = views
-          ? views.toLocaleString() + ' 次观看'
-          : '';
-        meta.textContent = viewText;
-        info.appendChild(titleEl);
-        if (viewText) {
-          info.appendChild(meta);
-        }
-        rec.appendChild(thumb);
-        rec.appendChild(info);
-        var nextId = item.bvid || (item.aid ? String(item.aid) : '');
-        if (nextId) {
-          rec.addEventListener('click', function () {
-            window.location.hash = '#/video/' + encodeURIComponent(nextId);
-          });
-        }
-        container.appendChild(rec);
-      });
+      BiliTubeAutoPlayState.nextId = '';
+      if (!list || !list.length) {
+        return;
+      }
+      var first = list[0] || {};
+      var firstId = first.bvid || (first.aid ? String(first.aid) : '');
+      if (firstId) {
+        BiliTubeAutoPlayState.nextId = firstId;
+      }
+      BiliTubeRecommendState.list = list;
+      BiliTubeRecommendState.index = 0;
+      BiliTubeRecommendState.finished = false;
+      BiliTubeRecommendState.container = container;
+      playerAppendNextRecommendationsPage();
     })
     .catch(function () {
       BiliTubeAutoPlayState.nextId = '';
+      BiliTubeRecommendState.list = [];
+      BiliTubeRecommendState.finished = true;
     });
 }
 

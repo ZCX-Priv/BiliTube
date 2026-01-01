@@ -303,7 +303,7 @@ function loadHomeVideos(tab, page, replace) {
     };
 
     const containerAll = grid.parentElement || grid;
-    if (typeof withLoader === 'function') {
+    if (typeof withLoader === 'function' && replace) {
       withLoader(containerAll, doFetchAll, 200);
     } else {
       doFetchAll();
@@ -374,7 +374,7 @@ function loadHomeVideos(tab, page, replace) {
       });
   };
 
-  if (typeof withLoader === 'function') {
+  if (typeof withLoader === 'function' && replace) {
     withLoader(container, doFetch, 200);
   } else {
     doFetch();
@@ -404,11 +404,90 @@ function bindHomeTagInteractions() {
   });
 }
 
+const HOME_PULL_STATE = {
+  enabled: false,
+  pulling: false,
+  startY: 0,
+  active: false,
+  threshold: 0
+};
+
+function bindHomePullToRefresh() {
+  const view = document.getElementById('view-home');
+  if (!view || HOME_PULL_STATE.enabled) return;
+  HOME_PULL_STATE.enabled = true;
+
+  function getScrollTop() {
+    return window.scrollY || document.documentElement.scrollTop || 0;
+  }
+
+  function handleTouchStart(e) {
+    if (!view || view.hidden) return;
+    if (getScrollTop() > 0) return;
+    if (!e.touches || !e.touches.length) return;
+    HOME_PULL_STATE.pulling = true;
+    HOME_PULL_STATE.startY = e.touches[0].clientY;
+    HOME_PULL_STATE.active = false;
+  }
+
+  function handleTouchMove(e) {
+    if (!HOME_PULL_STATE.pulling) return;
+    if (!e.touches || !e.touches.length) return;
+    const currentY = e.touches[0].clientY;
+    const delta = currentY - HOME_PULL_STATE.startY;
+    if (delta <= 0) {
+      HOME_PULL_STATE.active = false;
+      return;
+    }
+    if (getScrollTop() > 0) {
+      HOME_PULL_STATE.active = false;
+      return;
+    }
+    HOME_PULL_STATE.active = delta >= HOME_PULL_STATE.threshold;
+  }
+
+  function handleTouchEnd() {
+    if (!HOME_PULL_STATE.pulling) return;
+    const shouldRefresh = HOME_PULL_STATE.active;
+    HOME_PULL_STATE.pulling = false;
+    HOME_PULL_STATE.active = false;
+    if (!shouldRefresh) return;
+    if (HOME_STATE.loading) return;
+    HOME_STATE.finished = false;
+    HOME_STATE.cachedTab = '';
+    HOME_STATE.cachedHtml = '';
+    const tab = HOME_STATE.currentTab || 'all';
+    loadHomeVideos(tab, 1, true);
+  }
+
+  function handleWheel(e) {
+    if (!view || view.hidden) return;
+    if (HOME_STATE.loading) return;
+    const scrollTop = getScrollTop();
+    if (scrollTop > 0) return;
+    if (typeof e.deltaY !== 'number') return;
+    if (e.deltaY < 0) {
+      HOME_STATE.finished = false;
+      HOME_STATE.cachedTab = '';
+      HOME_STATE.cachedHtml = '';
+      const tab = HOME_STATE.currentTab || 'all';
+      loadHomeVideos(tab, 1, true);
+    }
+  }
+
+  view.addEventListener('touchstart', handleTouchStart, { passive: true });
+  view.addEventListener('touchmove', handleTouchMove, { passive: true });
+  view.addEventListener('touchend', handleTouchEnd);
+  view.addEventListener('touchcancel', handleTouchEnd);
+  view.addEventListener('wheel', handleWheel, { passive: true });
+}
+
 function initHomeView() {
   const grid = document.getElementById('video-grid');
   if (!grid) return;
   bindHomeTagInteractions();
   bindHomeScroll();
+  bindHomePullToRefresh();
   if (grid.dataset.homeInitialized === 'true') return;
   grid.dataset.homeInitialized = 'true';
   HOME_STATE.currentTab = 'all';

@@ -247,7 +247,6 @@ function storageRemoveItem(key) {
 /* --- 主题切换 --- */
 function initTheme() {
   const themeToggle = document.getElementById('theme-toggle');
-  const themeIcon = document.getElementById('theme-icon');
   const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
   
   const savedTheme = storageGetItem('theme');
@@ -256,17 +255,57 @@ function initTheme() {
     updateThemeIcon(true);
   }
 
-  themeToggle.addEventListener('click', () => {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    if (isDark) {
-      document.body.removeAttribute('data-theme');
-      storageSetItem('theme', 'light');
-      updateThemeIcon(false);
-    } else {
+  function applyTheme(theme) {
+    if (theme === 'dark') {
       document.body.setAttribute('data-theme', 'dark');
       storageSetItem('theme', 'dark');
       updateThemeIcon(true);
+    } else {
+      document.body.removeAttribute('data-theme');
+      storageSetItem('theme', 'light');
+      updateThemeIcon(false);
     }
+  }
+
+  if (!themeToggle) return;
+
+  let themeAnimating = false;
+
+  themeToggle.addEventListener('click', () => {
+    if (themeAnimating) return;
+
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const nextTheme = isDark ? 'light' : 'dark';
+
+    const rect = themeToggle.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    let overlay = document.getElementById('theme-transition-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'theme-transition-overlay';
+      overlay.className = 'theme-transition-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    overlay.style.backgroundColor = nextTheme === 'dark' ? '#121212' : '#F9F9F9';
+    overlay.style.setProperty('--theme-origin-x', cx + 'px');
+    overlay.style.setProperty('--theme-origin-y', cy + 'px');
+
+    themeAnimating = true;
+
+    overlay.getBoundingClientRect();
+    overlay.classList.add('active');
+
+    const handleTransitionEnd = function () {
+      overlay.removeEventListener('transitionend', handleTransitionEnd);
+      applyTheme(nextTheme);
+      overlay.classList.remove('active');
+      themeAnimating = false;
+    };
+
+    overlay.addEventListener('transitionend', handleTransitionEnd);
   });
 }
 
@@ -326,6 +365,7 @@ const routes = {
 
 let videoViewBound = false;
 let lastNonVideoHash = '#/home';
+let lastNonVideoScrollY = 0;
 
 const SUBS_VARIANT_KEY = 'BiliTube-subs-ux-variant';
 const SUBS_METRIC_KEY = 'BiliTube-subs-metrics';
@@ -386,9 +426,14 @@ function handleRouteChange() {
 
   const views = document.querySelectorAll('.view');
   let wasOnHome = false;
+  let previousViewId = null;
   views.forEach(view => {
+    const wasActive = !view.hidden;
+    if (wasActive) {
+      previousViewId = view.id;
+    }
     const active = view.id === viewId;
-    if (view.id === 'view-home' && !view.hidden) {
+    if (view.id === 'view-home' && wasActive) {
       wasOnHome = true;
     }
     view.hidden = !active;
@@ -426,6 +471,26 @@ function handleRouteChange() {
   } else if (viewId === 'view-search') {
     initSearchView(param1, param2);
   }
+
+  if (previousViewId === 'view-video' && viewId !== 'view-video') {
+    const targetScroll =
+      lastNonVideoScrollY ||
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      0;
+    if (targetScroll > 0) {
+      setTimeout(() => {
+        window.scrollTo(0, targetScroll);
+      }, 0);
+    }
+  }
+}
+
+function BiliTubeOpenVideo(hash) {
+  if (!hash) return;
+  lastNonVideoScrollY =
+    window.scrollY || document.documentElement.scrollTop || 0;
+  window.location.hash = hash;
 }
 
 function BiliTubeLoadProfileHeader(view) {

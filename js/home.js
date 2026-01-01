@@ -115,9 +115,9 @@ function createHomeCardHtml(video, indexOffset) {
     avatar = homeParseCoverUrl(avatar);
   }
   return (
-    '<div class="video-card" onclick="window.location.hash=\'#/video/' +
+    '<div class="video-card" onclick="BiliTubeOpenVideo(\'#/video/' +
     safeId +
-    '\'">' +
+    '\')">' +
     '<div class="thumbnail-container">' +
     '<img src="' + THUMBNAIL_PLACEHOLDER + '" alt="Thumbnail" class="thumbnail-img" loading="lazy"' +
     (cover ? ' data-src="' + cover + '"' : '') + '>' +

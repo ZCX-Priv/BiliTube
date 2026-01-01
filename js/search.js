@@ -187,11 +187,11 @@ function searchLoadMoreVideos() {
           var channelName = v.channel || '';
           var viewsText = v.views || '';
           var meta = viewsText;
-          var duration = v.duration || '';
-          return (
-            '<div class="video-card" onclick="window.location.hash=\'#/video/' +
-            safeId +
-            '\'">' +
+      var duration = v.duration || '';
+      return (
+        '<div class="video-card" onclick="BiliTubeOpenVideo(\'#/video/' +
+        safeId +
+        '\')">' +
             '<div class="thumbnail-container">' +
             '<img src="' + THUMBNAIL_PLACEHOLDER + '" alt="Thumbnail" class="thumbnail-img" loading="lazy"' +
             (cover ? ' data-src="' + cover + '" onload="this.src=this.getAttribute(\'data-src\')"' : '') + '>' +

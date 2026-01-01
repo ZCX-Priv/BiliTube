@@ -266,8 +266,9 @@ function BiliTubeBindProfileHistory(view) {
         if (itemEl) {
           const id = itemEl.getAttribute('data-id') || '';
           if (id) {
-            window.location.hash =
-              '#/video/' + encodeURIComponent(id);
+            BiliTubeOpenVideo(
+              '#/video/' + encodeURIComponent(id)
+            );
           }
         }
       });
@@ -287,4 +288,3 @@ function BiliTubeBindProfileHistory(view) {
     view.dataset.historyBound = 'true';
   }
 }
-

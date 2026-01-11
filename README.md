@@ -1,285 +1,276 @@
-# BiliTube
+# <img src="img/BiliTube.png" alt="BiliTube" width="40"> BiliTube
 
-BiliTube 是一个以 B 站为数据源的 Web 端播放页与首页 Demo，前端不依赖框架，只使用原生 HTML / CSS / JavaScript，实现了一个接近正式产品体验的「迷你版 B 站」。
+> 一个基于 Bilibili API、YouTube 风格的视频播放平台
 
-项目包含三个主要部分：
+<div align="center">
 
-- 静态前端页面（`index.html` + `css/style.css` + `js/*.js`）
-- 轻量级 Python 反向代理（`backend.py`）
-- 一些用于设计和演进的示例代码与截图（`examples/`、`design/`）
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.7+-green.svg)
+![HTML5](https://img.shields.io/badge/html5-orange.svg)
+![CSS3](https://img.shields.io/badge/css3-blue.svg)
+![JavaScript](https://img.shields.io/badge/javascript-yellow.svg)
 
-整体的设计目标是：在不引入复杂依赖的前提下，把「首页 → 搜索 → 视频播放 → 历史记录」这一条完整路径串起来，同时尽量还原 B 站在细节上的交互感觉，包括分 P 播放、弹幕、评论、推荐列表、历史记录等。
+[功能特性](#-功能特性) · [快速开始](#-快速开始) · [项目结构](#-项目结构) · [技术栈](#-技术栈) · [配置说明](#-配置说明)
 
-## 功能概览
+</div>
 
-### 首页
+---
 
-首页主要负责展示推荐视频和入口导航，逻辑集中在：
+## ✨ 功能特性
 
-- `index.html` 中的首页区域结构
-- `js/home.js` 中的首页数据获取与渲染逻辑
+### 🎬 核心功能
+- **视频播放** - 基于 HTML5 的视频播放器，支持高清/标清切换
+- **弹幕系统** - 实时弹幕显示，支持开关控制
+- **视频推荐** - 智能推荐相关视频，支持自动连播
+- **搜索功能** - 支持搜索视频和用户，带搜索建议
+- **订阅管理** - 关注 UP 主，查看订阅内容
 
-支持的能力包括：
+### 💾 数据存储
+- **观看历史** - 自动记录观看历史，支持断点续播
+- **收藏管理** - 收藏喜欢的视频
+- **点赞投币** - 支持点赞、投币、分享操作
 
-- 展示推荐视频卡片，卡片包含封面、标题、播放量等信息
-- 点击卡片跳转到对应的视频播放页（通过 `location.hash` 路由）
-- 顶部全局搜索框，可跳转到搜索结果页
+### 🎨 用户体验
+- **深色模式** - 支持深色/浅色主题切换
+- **响应式设计** - 完美适配桌面和移动设备
+- **流畅动画** - 精美的过渡动画和加载效果
+- **侧边栏** - 可折叠的侧边栏导航
 
-### 搜索
+### 🚀 性能优化
+- **智能缓存** - LRU 缓存机制，提升加载速度
+- **懒加载** - 图片和视频按需加载
+- **请求去重** - 防止重复请求，节省带宽
+- **Gzip 压缩** - 自动压缩响应数据
 
-搜索页负责关键词搜索与结果展示，主要代码在：
+---
 
-- `js/search.js`
-- `js/script.js` 中的路由与视图切换逻辑
+## 🚀 快速开始
 
-核心行为：
+### 环境要求
+- Python 3.7 或更高版本
+- 现代浏览器（Chrome、Firefox、Edge、Safari）
 
-- 输入关键字后触发搜索请求，数据来源为 B 站相关接口（通过 `backend.py` 代理，避免跨域）
-- 使用「视频 / 用户」两个 Tab 展示不同类型结果
-- 点击搜索结果中的视频卡片可以跳转到播放页
+### 安装步骤
 
-### 视频播放页
-
-视频播放页是项目的核心部分，结构主要在 `index.html` 的 `#view-video` 区块中，逻辑拆分在：
-
-- `js/player.js`：视频数据、弹幕、评论、推荐列表等与 B 站接口打交道的逻辑
-- `js/script.js`：视图初始化、事件绑定、路由切换
-- `css/style.css`：Material You 风格样式与布局
-
-播放页的主要功能：
-
-- 播放 B 站视频（支持多 P）
-  - 通过 B 站接口获取 `bvid` / `aid` / `cid`
-  - 根据当前选中的 P 请求播放地址，使用 `<video>` / HLS 播放
-  - 支持清晰度切换（在 video 元素的 `data-src-hd` / `data-src-sd` 基础上做切换）
-- 弹幕
-  - 调用 B 站弹幕接口拉取弹幕 XML
-  - 解析后在自绘的弹幕层中按时间轴滚动显示
-- 评论区
-  - 使用 B 站的回复接口加载评论列表，按分页懒加载
-  - 支持展示子回复，默认展开前两条回复
-  - 如有更多子回复，提供「查看全部 N 条回复 / 收起评论」的展开收起行为
-  - 加载失败时显示「暂无评论」或错误提示
-- 推荐视频
-  - 根据当前视频的 `bvid` / `aid` 请求推荐列表
-  - 以侧边列表的形式展示，点击跳转到对应视频
-- 分 P（剧集）列表
-  - 解析视频的多 P 信息，渲染为一组 chip
-  - 点击切换当前播放的 P，并重新拉取对应弹幕、播放地址等
-
-### 历史记录与个人中心
-
-项目内置了一套本地历史记录系统，主要逻辑在 `js/script.js` 中，底层使用 IndexedDB：
-
-- 在播放视频时写入一条历史记录，包含：
-  - 视频 id（`bvid` 或 `aid`）
-  - 标题、封面、分 P 信息
-  - 播放时间戳等
-- 提供「观看历史」视图：
-  - 按时间轴展示历史记录
-  - 支持删除单条历史
-    - 删除时弹出确认对话框
-    - 若能获取到视频标题，则确认文案中会换行显示《视频标题》
-  - 支持一键清空所有历史，同样有确认弹窗
-- 历史记录的读取、写入、删除都通过统一封装的函数进行，避免直接操作 IndexedDB
-
-### 代理服务（backend.py）
-
-前端全部跑在浏览器中，为了规避跨域问题，同时避免直接暴露本机的 B 站 Cookie，项目提供了一个轻量级反向代理：
-
-- 入口脚本：`backend.py`
-- 配置文件：`config.json`、`.env`（可选）
-- 详细说明：`backend.md`
-
-主要能力：
-
-- `/proxy`：通用 JSON / API 请求代理
-  - 通过查询参数 `u` 指定目标 URL
-  - 自动补齐协议、设置 UA、Referer、Origin
-  - 可为 B 站域名附加本地配置的登录 Cookie
-  - 对 JSON 类型响应里的 URL 做重写，使后续请求仍走代理
-- `/stream`：媒体流代理
-  - 用于转发视频流等大文件
-  - 处理范围更接近「管道」，不会对内容做解析与改写
-- CORS 友好
-  - 所有代理响应统一附带 `Access-Control-Allow-*` 头
-  - 前端只要能访问到这个代理端口，就可以发起跨域请求
-
-## 目录结构
-
-项目的顶层目录结构大致如下（简化版，只列出主要文件）：
-
-- `index.html`：单页应用入口，包含首页、搜索、视频播放等视图容器
-- `css/`
-  - `style.css`：全站样式，包括布局、主题色、动画等
-- `js/`
-  - `script.js`：路由、视图初始化、全局事件绑定、IndexedDB 历史记录等
-  - `player.js`：视频播放页相关的所有业务逻辑（播放地址、弹幕、评论、推荐）
-  - `home.js`：首页推荐内容相关逻辑
-  - `search.js`：搜索页逻辑
-  - `subscribe.js`：与订阅 / 关注相关的交互（若存在对应功能）
-- `backend.py`：Python 反向代理入口
-- `backend.md`：后端代理的详细技术说明
-- `config.json`：后端默认配置
-- `.env`：可选的本地环境变量配置，比如 B 站 Cookie
-- `examples/`：一些实验性的代码示例，不属于正式产品逻辑
-- `design/`：设计相关的图像资源，用于记录设计过程和效果
-
-## 运行方式
-
-### 启动后端代理
-
-前端访问 B 站接口时默认走本地代理，所以需要先启动 `backend.py`。
-
-1. 安装 Python 3（建议 3.10 及以上版本）
-2. 在项目根目录执行：
-
-   ```bash
-   python backend.py
-   ```
-
-3. 正常情况下终端会输出类似：
-
-   ```text
-   服务启动成功！
-   地址: http://0.0.0.0:8000/
-   ```
-
-4. 如需修改监听地址、端口、UA 等，可以编辑 `config.json` 或设置对应环境变量：
-
-   - `BiliTube_HOST`
-   - `BiliTube_PORT`
-   - `BiliTube_SCHEME`
-   - `BiliTube_LOG_LEVEL`
-   - `BiliTube_USER_AGENT`
-   - `BiliTube_URL_REGEX`
-
-### 配置 B 站登录 Cookie（可选）
-
-部分需要登录状态的接口（例如历史记录同步、稍后再看等）会用到 Cookie，可以通过环境变量传给后端：
-
-- 常用变量名：
-  - `BiliTube_Cookie`
-  - `BiliTube_COOKIE`
-  - `BILIBILI_COOKIE`
-  - `BiliTube_COOKIE`
-
-可以直接在 `.env` 中配置，例如：
-
-```env
-BiliTube_Cookie=SESSDATA=xxxx; bili_jct=xxxx; DedeUserID=xxxx;
+1. **克隆项目**
+```bash
+git clone https://github.com/yourusername/BiliTube.git
+cd BiliTube
 ```
 
-后端启动时会加载 `.env`，并在代理到 B 站时自动附加这些 Cookie。
+2. **配置服务器**（可选）
+编辑 `config.json` 文件：
+```json
+{
+  "host": "0.0.0.0",
+  "port": 8000,
+  "scheme": "http",
+  "log_level": 3,
+  "url_regex": "https?://[^\"'\\s]+"
+}
+```
 
-### 启动前端页面
+3. **启动服务器**
+```bash
+python app.py
+```
 
-前端部分没有构建步骤，直接作为静态资源访问即可。开发时可以选择下面任意一种方式：
+4. **访问应用**
+打开浏览器访问：`http://localhost:8000`
 
-1. 使用后端自带的静态文件能力  
-   将浏览器指向：
+---
 
-   ```text
-   http://127.0.0.1:8000/index.html
-   ```
+## 📁 项目结构
 
-   由 `backend.py` 负责同时提供代理接口和静态文件。
+```
+BiliTube/
+├── app.py                 # Python 后端代理服务器
+├── config.json            # 配置文件
+├── index.html             # 主页面
+├── css/
+│   └── style.css          # 样式文件
+├── js/
+│   ├── script.js          # 核心脚本
+│   ├── home.js            # 首页逻辑
+│   ├── player.js          # 视频播放器
+│   ├── search.js          # 搜索功能
+│   ├── search-suggest.js  # 搜索建议
+│   ├── modal.js           # 模态框
+│   ├── history.js         # 观看历史
+│   ├── favorate.js        # 收藏功能
+│   ├── love.js            # 点赞功能
+│   ├── coin.js            # 投币功能
+│   ├── share.js           # 分享功能
+│   ├── subscribe.js       # 订阅功能
+│   └── loading.js         # 加载动画
+├── img/
+│   ├── BiliTube.png       # Logo
+│   ├── BiliTube-Font.png  # Logo 文字
+│   ├── avatar-placeholder.png    # 头像占位图
+│   └── thumbnail-placeholder.png # 缩略图占位图
+└── README.md              # 项目说明
+```
 
-2. 使用任意本地静态服务器  
-   例如 VS Code 的 Live Server、`python -m http.server` 等，将项目根目录作为站点根目录即可。  
-   此时需要注意前端访问 B 站接口的 URL 应指向后端代理地址。
+---
 
-## 路由与视图管理
+## 🛠 技术栈
 
-项目采用基于 `location.hash` 的前端路由，所有视图都在单个 HTML 文件中：
+### 后端
+- **Python** - 主要编程语言
+- **http.server** - HTTP 服务器
+- **socketserver** - 套接字服务器
+- **urllib** - HTTP 请求处理
+- **gzip** - 数据压缩
+- **threading** - 多线程处理
 
-- 首页视图：`#view-home`
-- 搜索视图：`#view-search`
-- 视频播放视图：`#view-video`
-- 其他视图（如个人中心 / 历史）根据实际结构在 `index.html` 中定义
+### 前端
+- **HTML5** - 页面结构
+- **CSS3** - 样式设计
+  - CSS 变量
+  - Flexbox 布局
+  - CSS Grid 布局
+  - 动画和过渡
+- **JavaScript (ES6+)** - 交互逻辑
+  - Fetch API
+  - IndexedDB
+  - DOM 操作
+  - 事件处理
 
-`js/script.js` 中负责：
+### 核心特性
+- **单页应用 (SPA)** - 基于哈希路由
+- **代理服务器** - 解决跨域问题
+- **LRU 缓存** - 智能数据缓存
+- **IndexedDB** - 本地数据存储
 
-- 监听 `hashchange` 事件
-- 根据哈希值切换对应的视图容器显示 / 隐藏
-- 初始化各视图的事件绑定与状态（例如 `initVideoView` 会触发 `BiliTubeLoadVideoById`，并初始化评论滚动加载等）
+---
 
-## 评论区与回复展开逻辑
+## ⚙️ 配置说明
 
-评论区的数据来自 B 站的回复接口，具体逻辑在 `js/player.js` 中：
+### 服务器配置
 
-- `playerLoadComments(aid)`：
-  - 根据 `aid` 重置评论状态，清空容器
-  - 调用 `playerLoadMoreComments(true)` 拉取第一页评论
-- `playerLoadMoreComments(isFirstPage)`：
-  - 先尝试新版回复接口 `/x/v2/reply/main`
-  - 如返回异常，再回退到旧接口 `/x/v2/reply`
-  - 渲染每条主评论及其子回复预览
-  - 主评论中的回复框默认展开
-- 子回复渲染：
-  - 使用 `playerAppendSubReply(box, sub)` 统一创建子回复 DOM 结构
-  - 每条子回复包含头像、用户名、回复内容
-- 展开更多 / 收起评论：
-  - 如果 `rcount` 大于当前展示的子回复数量，会在回复框底部插入一行「查看全部 N 条回复」
-  - 点击后调用 `playerShowMoreReplies`，拉取完整子回复列表并全部展开，同时把文案改成「收起评论」
-  - 再次点击「收起评论」时，不再请求接口，而是用之前缓存的列表，只展示前两条，恢复成预览状态，文案改回「查看全部 N 条回复」
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `host` | 服务器监听地址 | `0.0.0.0` |
+| `port` | 服务器监听端口 | `8000` |
+| `scheme` | 协议类型 | `http` |
+| `log_level` | 日志级别 (0-4) | `3` |
+| `url_regex` | URL 匹配正则 | `https?://[^\"'\\s]+` |
+| `cookie` | Bilibili Cookie（可选） | `""` |
+| `cache_size` | 缓存大小 | `200` |
+| `cache_ttl` | 缓存过期时间（秒） | `60` |
+| `max_connections` | 最大连接数 | `100` |
 
-这里特意保留了「预览两条 → 展开全部 → 收起还原」这一套交互，既能避免评论区过长，又能保证常用信息随手可见。
+### 日志级别
 
-## 历史记录与确认弹窗
+- `0` - CRITICAL
+- `1` - WARNING
+- `2` - ERROR
+- `3` - INFO
+- `4` - DEBUG
 
-项目内部有一套统一的确认弹窗实现，位于：
+### 环境变量
 
-- `index.html` 中的 `#BiliTube-modal` 结构
-- `js/script.js` 中的 `BiliTubeInitModal` 与 `BiliTubeConfirm` 函数
+你也可以通过环境变量配置：
 
-行为特点：
+```bash
+export BiliTube_HOST="0.0.0.0"
+export BiliTube_PORT="8000"
+export BiliTube_SCHEME="http"
+export BiliTube_LOG_LEVEL="3"
+export BiliTube_cookie="your_cookie_here"
+```
 
-- 若自定义的模态框存在，则优先使用它展示确认对话框
-- 若模态框不存在，则回退到浏览器原生 `window.confirm`
-- 调用方拿到的是一个 `Promise<boolean>`，便于串联后续逻辑
+---
 
-历史记录相关操作会使用这套确认弹窗，尤其是：
+## 🎯 API 接口
 
-- 删除单条历史记录时：
-  - 如果能拿到视频标题，确认文案会分两行显示：
-    - 第一行为「确定删除这条观看记录吗？」
-    - 第二行为《视频标题》
-- 清空全部历史记录时：
-  - 弹出统一的二次确认提示，避免误操作
+### 代理接口
 
-## 示例代码与设计资源
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/proxy` | GET/POST | 代理请求 Bilibili API |
+| `/stream` | GET | 流式传输视频数据 |
+| `/clear_cache` | GET | 清除缓存 |
 
-项目中还包含两个用于辅助开发的目录：
+### Bilibili API
 
-- `examples/`：
-  - 存放早期的组件化实验代码，例如独立的播放器组件、搜索组件、消息提示组件等
-  - 不参与正式页面的加载，主要作为参考或备用方案
-- `design/`：
-  - 存放若干截图和效果图，用于记录 UI 从草图到成品的过程
+项目使用以下 Bilibili API：
 
-在实际部署或打包时，可以视情况忽略这两个目录。
+- 视频推荐：`/x/web-interface/wbi/index/top/feed/rcmd`
+- 热门视频：`/x/web-interface/popular`
+- 视频信息：`/x/web-interface/view`
+- 播放地址：`/x/player/playurl`
+- 弹幕数据：`/comment.bilibili.com/{cid}.xml`
+- 评论列表：`/x/v2/reply/main`
+- 搜索接口：`/x/web-interface/wbi/search/type`
+- 相关推荐：`/x/web-interface/archive/related`
 
-## 部署与注意事项
+---
 
-如果要将 BiliTube 部署到线上环境，推荐的方式是：
+## 📱 使用说明
 
-1. 将静态资源（`index.html`、`css/`、`js/`、`design/` 等）放到任意静态资源服务器上
-2. 将 `backend.py` 部署为一个长期运行的服务，暴露固定的 HTTP 入口
-3. 确保前端访问 B 站接口时使用的是部署好的代理地址（保持与本地一致的路径结构更省事）
+### 首页
+- 浏览推荐视频、热门视频
+- 点击标签切换不同内容
+- 下拉刷新或滚动加载更多
 
-需要注意的几点：
+### 视频播放
+- 点击视频卡片进入播放页面
+- 支持播放/暂停、快进/快退
+- 可切换高清/标清画质
+- 支持弹幕开关
+- 支持倍速播放
+- 自动记录播放进度
 
-- 本项目只是一个前端 Demo，没有处理登录流程，只是通过本地配置的 Cookie 复用已有登录态
-- 不建议将完整的 B 站 Cookie 直接写入公开仓库的配置文件，应仅保存在本地 `.env` 或部署环境的私密变量中
-- 代理服务默认会允许任意来源访问（CORS `*`），如果对安全性有要求，可以在生产环境中收紧允许的来源
+### 搜索
+- 在搜索框输入关键词
+- 选择搜索视频或用户
+- 支持搜索建议和历史记录
 
-## 适用场景
+### 个人中心
+- 查看观看历史
+- 管理收藏视频
+- 清空历史记录
 
-这个项目适合用来做：
+---
 
-- 原生 Web 能力练习（不依赖框架，完整走一遍从数据到视图的链路）
-- 播放器交互与弹幕实现的参考
-- 自己定制一个轻量的「个人 B 站入口」页面
+## � AI 使用说明
 
-如果后续要继续演进，例如引入真实账号体系、服务端渲染或前端框架，可以在现有结构的基础上逐步替换，不必推翻重来。
+本程序使用 Trae IDE 进行编辑，各 AI 模型分工如下：
+
+| 负责领域 | AI 模型 |
+|---------|---------|
+| UI 设计 & 原型制作 | Gemini3 Pro |
+| 前/后端编码 & 功能设计 | GPT 5.1 |
+| 性能优化 & Bug 修复 | Minimax M2.1 |
+| 文档制作 | GLM 4.7 |
+
+感谢各 AI 模型的协作，共同完成了 BiliTube 项目的开发！
+
+---
+
+## �🤝 贡献指南
+
+欢迎贡献代码！请遵循以下步骤：
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+
+---
+
+<div align="center">
+
+**如果这个项目对你有帮助，请给个 ⭐️ Star 支持一下！**
+
+Made with ❤️ by ThinkerX
+
+</div>

@@ -1,11 +1,12 @@
 <div align="center">
 
-# <img src="img/BiliTube.png" alt="BiliTube" width="200" height="200" style="border:none;box-shadow:none;">
+<a>
+<img src="img/BiliTube.png" alt="BiliTube" width="200" height="200" style="border:none;box-shadow:none;">
+</a>
 
-# BiliTube
+<h1 style="font-size: 3em; font-weight: bold; margin: 20px 0;">BiliTube</h1>
 
-一个基于 Bilibili API、YouTube 风格的视频播放平台
-
+<p style="font-size: 1.2em; color: #666;">一个基于 Bilibili API、YouTube 风格的视频播放平台</p>
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.7+-green.svg)

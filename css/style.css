@@ -312,9 +312,6 @@ body {
   padding: 12px 0 16px;
   max-height: 70vh;
   overflow-y: auto;
-}
-
-.search-suggestions-content {
   scrollbar-width: none;
 }
 
@@ -1099,107 +1096,9 @@ body {
   flex-direction: column;
 }
 
-.video-sidebar {
-  width: 350px;
-}
-
-.player-container {
-  width: 100%;
-  padding-top: 56.25%;
-  background-color: #000;
-  position: relative;
-  border-radius: var(--radius-card);
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.player-placeholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-size: 24px;
-  background-image: url('://picsum.photos/1280/720?random=100');
-  background-size: cover;
-}
-
-.play-btn-overlay {
-  width: 64px;
-  height: 64px;
-  background-color: rgba(0,0,0,0.6);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-
-.play-btn-overlay svg {
-  fill: white;
-  width: 32px;
-  height: 32px;
-}
-
-.video-primary-info h1 {
-  font-size: 20px;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.video-stats {
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--divider-color);
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-}
-
-.actions {
+.BiliTube-video-layout {
   display: flex;
   gap: 16px;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.channel-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.subscribe-btn {
-  background-color: var(--secondary-color);
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: var(--radius-btn);
-  font-weight: 500;
-  cursor: pointer;
-  margin-left: auto;
-}
-
-.video-description {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text-primary);
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--divider-color);
-}
-
-.comments-section h3 {
-  margin-bottom: 16px;
 }
 
 .BiliTube-video-layout {
@@ -1603,11 +1502,6 @@ body {
 .BiliTube-panel-body::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
-
-.BiliTube-panel-body {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 .BiliTube-panel-video-controls {
@@ -2019,37 +1913,6 @@ body {
   color: var(--text-secondary);
 }
 
-.related-video-card {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  cursor: pointer;
-}
-
-.related-thumb {
-  width: 168px;
-  height: 94px;
-  border-radius: var(--radius-card);
-  background-color: #000;
-  flex-shrink: 0;
-  position: relative;
-}
-
-.related-info h4 {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.related-meta {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
 .search-results-header {
   display: flex;
   align-items: center;
@@ -2309,34 +2172,8 @@ body {
   margin-left: 16px;
 }
 
-.no-flex-gap .related-video-card > * + * {
-  margin-left: 8px;
-}
-
-.no-flex-gap .user-list-row > * {
-  margin-right: 16px;
-  margin-bottom: 16px;
-}
-
-.no-flex-gap .user-card > * + * {
+.user-card > * + * {
   margin-left: 12px;
-}
-
-.search-load-more {
-  margin: 16px auto 0;
-  display: block;
-  padding: 8px 16px;
-  border-radius: var(--radius-btn);
-  border: none;
-  cursor: pointer;
-  background-color: var(--primary-color);
-  color: #fff;
-  font-size: 13px;
-}
-
-.search-load-more[disabled] {
-  opacity: 0.6;
-  cursor: default;
 }
 
 .sidebar-collapsed .sidebar {

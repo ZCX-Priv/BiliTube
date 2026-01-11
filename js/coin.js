@@ -1,4 +1,8 @@
 const COIN_STORE = 'coins';
+let coinRainCanvas = null;
+let coinRainCtx = null;
+let coinRainCoins = [];
+let coinRainAnimationId = null;
 
 function BiliTubeSetCoin(videoId, amount) {
   const id = (videoId || '').trim();
@@ -81,44 +85,136 @@ function BiliTubeSetupCoinButton(videoId) {
     .catch(function () {});
 }
 
+function BiliTubeInitCoinRain() {
+  if (coinRainCanvas) return;
+  coinRainCanvas = document.createElement('canvas');
+  coinRainCanvas.id = 'BiliTube-coin-rain-canvas';
+  coinRainCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(coinRainCanvas);
+  coinRainCtx = coinRainCanvas.getContext('2d');
+  window.addEventListener('resize', BiliTubeResizeCoinRain);
+  BiliTubeResizeCoinRain();
+}
+
+function BiliTubeResizeCoinRain() {
+  if (coinRainCanvas) {
+    coinRainCanvas.width = window.innerWidth;
+    coinRainCanvas.height = window.innerHeight;
+  }
+}
+
+class BiliTubeCoin {
+  constructor(startX, startY) {
+    this.x = startX !== undefined ? startX : Math.random() * window.innerWidth;
+    this.y = startY !== undefined ? startY : -Math.random() * window.innerHeight - 50;
+    this.size = 12 + Math.random() * 12;
+    this.speedY = 4 + Math.random() * 8;
+    this.speedX = (Math.random() - 0.5) * 3;
+    this.rotation = Math.random() * Math.PI * 2;
+    this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+    this.opacity = 0.7 + Math.random() * 0.3;
+    this.scaleX = 1;
+    this.scaleXSpeed = 0.08 + Math.random() * 0.12;
+  }
+
+  update() {
+    this.y += this.speedY;
+    this.x += this.speedX;
+    this.rotation += this.rotationSpeed;
+    this.scaleX = Math.cos(this.rotation);
+    if (this.y > window.innerHeight + 100) {
+      return false;
+    }
+    return true;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation * 0.15);
+    ctx.scale(Math.abs(this.scaleX), 1);
+    
+    const gradient = ctx.createRadialGradient(
+      -this.size * 0.3, -this.size * 0.3, 0,
+      0, 0, this.size
+    );
+    gradient.addColorStop(0, '#FFF7C0');
+    gradient.addColorStop(0.4, '#FFD700');
+    gradient.addColorStop(0.8, '#D4AF37');
+    gradient.addColorStop(1, '#996515');
+    
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 215, 0, ${this.opacity})`;
+    ctx.fill();
+    
+    ctx.strokeStyle = `rgba(184, 134, 11, ${this.opacity})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size * 0.7, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(184, 134, 11, ${this.opacity * 0.5})`;
+    ctx.stroke();
+    
+    ctx.fillStyle = `rgba(184, 134, 11, ${this.opacity * 0.7})`;
+    ctx.font = `bold ${this.size}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Ɓ', 0, 0);
+    
+    ctx.restore();
+  }
+}
+
+function BiliTubeAnimateCoinRain() {
+  if (!coinRainCtx || !coinRainCanvas) return;
+  
+  coinRainCtx.clearRect(0, 0, coinRainCanvas.width, coinRainCanvas.height);
+  
+  coinRainCoins = coinRainCoins.filter(coin => {
+    const active = coin.update();
+    if (active) coin.draw(coinRainCtx);
+    return active;
+  });
+  
+  if (coinRainCoins.length > 0) {
+    coinRainAnimationId = requestAnimationFrame(BiliTubeAnimateCoinRain);
+  } else {
+    coinRainAnimationId = null;
+  }
+}
+
 function BiliTubePlayCoinEffect(target) {
+  BiliTubeInitCoinRain();
+  
   const anchor = target && target.getBoundingClientRect ? target : null;
-  let x = window.innerWidth / 2;
-  let y = window.innerHeight / 2;
+  let centerX = window.innerWidth / 2;
+  let centerY = window.innerHeight / 2;
+  
   if (anchor) {
     const rect = anchor.getBoundingClientRect();
-    x = rect.left + rect.width / 2;
-    y = rect.top + rect.height / 2;
+    centerX = rect.left + rect.width / 2;
+    centerY = rect.top + rect.height / 2;
   }
-  const container = document.createElement('div');
-  container.className = 'BiliTube-coin-burst';
-  container.style.left = x + 'px';
-  container.style.top = y + 'px';
-  const count = 14;
+  
+  const count = 80;
   for (let i = 0; i < count; i++) {
-    const item = document.createElement('div');
-    item.className = 'BiliTube-coin-burst-item';
-    container.appendChild(item);
+    const offsetX = (Math.random() - 0.5) * 200;
+    const offsetY = (Math.random() - 0.5) * 200 - 100;
+    coinRainCoins.push(new BiliTubeCoin(centerX + offsetX, centerY + offsetY));
   }
-  document.body.appendChild(container);
-  const items = container.children;
-  requestAnimationFrame(() => {
-    for (let i = 0; i < items.length; i++) {
-      const angle = (Math.PI * 2 * i) / items.length;
-      const distance = 60 + Math.random() * 40;
-      const dx = Math.cos(angle) * distance;
-      const dy = -Math.abs(Math.sin(angle) * distance) - 10;
-      const item = items[i];
-      item.style.opacity = '1';
-      item.style.transform =
-        'translate(' + dx + 'px,' + dy + 'px) scale(1.2)';
-    }
-  });
+  
+  if (!coinRainAnimationId) {
+    BiliTubeAnimateCoinRain();
+  }
+  
   setTimeout(() => {
-    if (container.parentNode) {
-      container.parentNode.removeChild(container);
+    if (coinRainAnimationId) {
+      cancelAnimationFrame(coinRainAnimationId);
+      coinRainAnimationId = null;
     }
-  }, 900);
+  }, 3000);
 }
 
 function BiliTubeShowCoinModal(videoId, btn) {

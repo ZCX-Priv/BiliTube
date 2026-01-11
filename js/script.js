@@ -964,7 +964,7 @@ function bindVideoView(view) {
             }
             BiliTubeShowCoinModal(videoId || '', btn);
           }
-        } else {
+        } else if (action !== 'share') {
           const alreadyActive = btn.classList.contains('BiliTube-action-active');
           if (!alreadyActive) {
             btn.classList.add('BiliTube-action-active');

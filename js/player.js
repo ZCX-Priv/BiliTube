@@ -1201,7 +1201,8 @@ function BiliTubeLoadVideoById(id) {
         }
         var shareBtn = document.querySelector('.BiliTube-action-btn[data-action="share"]');
         if (shareBtn) {
-          shareBtn.addEventListener('click', function() {
+          shareBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (typeof BiliTubeShowShareModal === 'function') {
               BiliTubeShowShareModal(historyId);
             }

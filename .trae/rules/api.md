@@ -1,1 +1,0 @@
-bilibili的api接入方式和详细文档在bilibili-api-docs里面，你可以在里面找到所有的api接口和详细的参数说明。

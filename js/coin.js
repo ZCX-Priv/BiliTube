@@ -200,21 +200,14 @@ function BiliTubePlayCoinEffect(target) {
   
   const count = 80;
   for (let i = 0; i < count; i++) {
-    const offsetX = (Math.random() - 0.5) * 200;
-    const offsetY = (Math.random() - 0.5) * 200 - 100;
-    coinRainCoins.push(new BiliTubeCoin(centerX + offsetX, centerY + offsetY));
+    const startX = Math.random() * window.innerWidth;
+    const startY = -Math.random() * window.innerHeight - 50;
+    coinRainCoins.push(new BiliTubeCoin(startX, startY));
   }
   
   if (!coinRainAnimationId) {
     BiliTubeAnimateCoinRain();
   }
-  
-  setTimeout(() => {
-    if (coinRainAnimationId) {
-      cancelAnimationFrame(coinRainAnimationId);
-      coinRainAnimationId = null;
-    }
-  }, 3000);
 }
 
 function BiliTubeShowCoinModal(videoId, btn) {

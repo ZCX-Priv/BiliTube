@@ -1196,6 +1196,17 @@ function BiliTubeLoadVideoById(id) {
         if (typeof BiliTubeSetupCoinButton === 'function') {
           BiliTubeSetupCoinButton(historyId);
         }
+        if (typeof BiliTubeSetupShareButton === 'function') {
+          BiliTubeSetupShareButton(historyId);
+        }
+        var shareBtn = document.querySelector('.BiliTube-action-btn[data-action="share"]');
+        if (shareBtn) {
+          shareBtn.addEventListener('click', function() {
+            if (typeof BiliTubeShowShareModal === 'function') {
+              BiliTubeShowShareModal(historyId);
+            }
+          });
+        }
       }
       playerRenderEpisodes(pages, cid, bvid, aid, videoEl);
       BiliTubeSeekPreload.bind(videoEl);

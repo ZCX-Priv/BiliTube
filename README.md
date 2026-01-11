@@ -4,7 +4,7 @@
 
 # BiliTube
 
-> 一个基于 Bilibili API、YouTube 风格的视频播放平台
+ 一个基于 Bilibili API、YouTube 风格的视频播放平台
 
 ---
 

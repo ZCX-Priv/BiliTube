@@ -1,8 +1,12 @@
-# <img src="img/BiliTube.png" alt="BiliTube" width="40"> BiliTube
+<div align="center">
+
+# <img src="img/BiliTube.png" alt="BiliTube" width="80" height="80">
+
+# BiliTube
 
 > 一个基于 Bilibili API、YouTube 风格的视频播放平台
 
-<div align="center">
+---
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.7+-green.svg)
@@ -18,25 +22,25 @@
 
 ## ✨ 功能特性
 
-### 🎬 核心功能
+### 核心功能
 - **视频播放** - 基于 HTML5 的视频播放器，支持高清/标清切换
 - **弹幕系统** - 实时弹幕显示，支持开关控制
 - **视频推荐** - 智能推荐相关视频，支持自动连播
 - **搜索功能** - 支持搜索视频和用户，带搜索建议
 - **订阅管理** - 关注 UP 主，查看订阅内容
 
-### 💾 数据存储
+### 数据存储
 - **观看历史** - 自动记录观看历史，支持断点续播
 - **收藏管理** - 收藏喜欢的视频
 - **点赞投币** - 支持点赞、投币、分享操作
 
-### 🎨 用户体验
+### 用户体验
 - **深色模式** - 支持深色/浅色主题切换
 - **响应式设计** - 完美适配桌面和移动设备
 - **流畅动画** - 精美的过渡动画和加载效果
 - **侧边栏** - 可折叠的侧边栏导航
 
-### 🚀 性能优化
+### 性能优化
 - **智能缓存** - LRU 缓存机制，提升加载速度
 - **懒加载** - 图片和视频按需加载
 - **请求去重** - 防止重复请求，节省带宽
@@ -44,7 +48,7 @@
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
 ### 环境要求
 - Python 3.7 或更高版本
@@ -80,7 +84,7 @@ python app.py
 
 ---
 
-## 📁 项目结构
+## 项目结构
 
 ```
 BiliTube/
@@ -113,7 +117,7 @@ BiliTube/
 
 ---
 
-## 🛠 技术栈
+## 技术栈
 
 ### 后端
 - **Python** - 主要编程语言
@@ -144,7 +148,7 @@ BiliTube/
 
 ---
 
-## ⚙️ 配置说明
+## 配置说明
 
 ### 服务器配置
 
@@ -182,7 +186,7 @@ export BiliTube_cookie="your_cookie_here"
 
 ---
 
-## 🎯 API 接口
+## API 接口
 
 ### 代理接口
 
@@ -207,7 +211,7 @@ export BiliTube_cookie="your_cookie_here"
 
 ---
 
-## 📱 使用说明
+## 使用说明
 
 ### 首页
 - 浏览推荐视频、热门视频
@@ -234,22 +238,20 @@ export BiliTube_cookie="your_cookie_here"
 
 ---
 
-## � AI 使用说明
+## AI 使用说明
 
 本程序使用 Trae IDE 进行编辑，各 AI 模型分工如下：
 
 | 负责领域 | AI 模型 |
 |---------|---------|
-| UI 设计 & 原型制作 | Gemini3 Pro |
+| UI 设计 & 原型制作 | Gemini 3 Pro |
 | 前/后端编码 & 功能设计 | GPT 5.1 |
 | 性能优化 & Bug 修复 | Minimax M2.1 |
 | 文档制作 | GLM 4.7 |
 
-感谢各 AI 模型的协作，共同完成了 BiliTube 项目的开发！
-
 ---
 
-## �🤝 贡献指南
+## 贡献指南
 
 欢迎贡献代码！请遵循以下步骤：
 
@@ -261,7 +263,7 @@ export BiliTube_cookie="your_cookie_here"
 
 ---
 
-## 📄 许可证
+## 许可证
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
 

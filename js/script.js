@@ -295,7 +295,7 @@ function initStorage() {
     if (!db) {
       return;
     }
-    const keys = ['theme', 'BiliTube-search-history', 'sidebar-collapsed', 'BiliTube-subs-ux-variant', 'BiliTube-subs-metrics'];
+    const keys = ['theme', 'BiliTube-search-history', 'sidebar-collapsed', 'BiliTube-subs-ux-variant', 'BiliTube-subs-metrics', 'auto-play-enabled'];
     return Promise.all(keys.map((key) => {
       return new Promise((resolve) => {
         const tx = db.transaction(STORAGE_STORE_NAME, 'readonly');

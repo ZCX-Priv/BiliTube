@@ -7,6 +7,7 @@ import time
 import urllib.parse
 import urllib.request
 import gzip
+import zlib
 import os
 import sys
 import re
@@ -291,6 +292,16 @@ def compress_response(body):
     return body, False
 
 
+def decompress_deflate(data):
+    try:
+        return zlib.decompress(data, -zlib.MAX_WBITS)
+    except Exception:
+        try:
+            return zlib.decompress(data)
+        except Exception:
+            return data
+
+
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     server_version = "BiliTubeProxy/1.0"
 
@@ -380,6 +391,20 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 logging.warning("代理请求失败: %s", e)
                 return None
 
+        def fetch_with_headers():
+            try:
+                req = urllib.request.Request(
+                    target,
+                    data=body,
+                    headers=outgoing_headers,
+                    method=method,
+                )
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    return resp.read(), dict(resp.headers)
+            except Exception as e:
+                logging.warning("代理请求失败: %s", e)
+                return None, None
+
         try:
             raw_body = get_cached_or_fetch(target, fetch)
             if raw_body is None:
@@ -391,9 +416,32 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
                 return
             status = 200
-            content_type = "application/json; charset=utf-8"
+            
+            if 'comment.bilibili.com' in target and target.endswith('.xml'):
+                raw_body = decompress_deflate(raw_body)
+            
             body_bytes = rewrite_json_links(raw_body, CONFIG["url_regex"])
             compressed, was_compressed = compress_response(body_bytes)
+            
+            content_type = "application/json; charset=utf-8"
+            if target.endswith('.xml') or 'comment.bilibili.com' in target:
+                content_type = "text/xml; charset=utf-8"
+            elif target.endswith('.png'):
+                content_type = "image/png"
+            elif target.endswith('.jpg') or target.endswith('.jpeg'):
+                content_type = "image/jpeg"
+            elif target.endswith('.gif'):
+                content_type = "image/gif"
+            elif target.endswith('.webp'):
+                content_type = "image/webp"
+            else:
+                cached = get_cached_or_fetch(target + "_headers", lambda: fetch_with_headers())
+                raw_body_ct, resp_headers = cached if cached is not None else (None, {})
+                if raw_body_ct and resp_headers:
+                    ct = resp_headers.get('Content-Type', resp_headers.get('content-type', ''))
+                    if ct:
+                        content_type = ct.split(';')[0] + '; charset=utf-8'
+            
             self.send_response(status)
             self.send_cors_headers()
             if was_compressed:

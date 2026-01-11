@@ -1144,16 +1144,8 @@ body {
   font-size: 18px;
   color: #fff;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
-  animation: BiliTube-danmaku-move 8s linear;
-}
-
-@keyframes BiliTube-danmaku-move {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+  left: 100%;
+  will-change: transform;
 }
 
 .BiliTube-video-error {

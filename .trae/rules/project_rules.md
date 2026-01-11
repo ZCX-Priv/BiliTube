@@ -1,5 +1,8 @@
 # BiliTube 项目编码规范
 
+## api文档位置
+- 在根目录的bilibili-API-collect文件夹里面，在需要调用或修改api是查阅
+
 ## Chrome 80+ 兼容性
 - 本地开发必须用 `localhost`，禁止直接打开 HTML 文件
 
